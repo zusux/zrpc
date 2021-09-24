@@ -16,22 +16,23 @@ var loger *logrus.Logger
 
 type Format string
 var (
-	JSON Format ="JSON"
-	Text Format ="Text"
+	Json Format ="json"
+	Text Format ="text"
 )
 
 type Log struct{
 	Path string
 	File string
-	Age time.Duration
-	Rotation time.Duration
+	Age int64
+	Rotation int64
 	Format
 }
 
-func NewLog(path string,format Format) *Log{
+func NewLog(path ,file ,format string,age,rotation int64) *Log{
 	l := &Log{
 		Path: path,
-		Format:format,
+		File: file,
+		Format:Format(format),
 	}
 	return l
 }
@@ -44,8 +45,8 @@ func (l *Log) Zlog() *logrus.Logger{
 		writer, err := rotatelogs.New(
 			baseLogPaht+".%Y-%m-%d[%H]",
 			rotatelogs.WithLinkName(baseLogPaht), // 生成软链，指向最新日志文件
-			rotatelogs.WithMaxAge(l.Age), // 文件最大保存时间
-			rotatelogs.WithRotationTime(l.Rotation), // 日志切割时间间隔
+			rotatelogs.WithMaxAge(time.Duration(l.Age) * time.Hour), // 文件最大保存时间
+			rotatelogs.WithRotationTime(time.Duration(l.Rotation) * time.Hour), // 日志切割时间间隔
 		)
 		if err != nil {
 			logrus.Errorf("config local file system logger error. %+v", errors.WithStack(err))
@@ -81,12 +82,17 @@ func (l *Log) Zlog() *logrus.Logger{
 
 
 
-func (l *Log) SetAge(age time.Duration) *Log {
-	l.Age = time.Hour * time.Duration(age)
+func (l *Log) SetAge(age int64) *Log {
+	l.Age = age
 	return l
 }
-func (l *Log)SetRotation(rotation time.Duration) *Log {
-	l.Rotation = time.Hour * time.Duration(rotation)
+func (l *Log)SetRotation(rotation int64) *Log {
+	l.Rotation = rotation
+	return l
+}
+
+func (l *Log)SetPath(path string) *Log {
+	l.Path = path
 	return l
 }
 
@@ -95,15 +101,15 @@ func (l *Log)SetFile(filename string) *Log {
 	return l
 }
 
-func (l *Log)SetFormat(format Format) *Log {
-	l.Format = format
+func (l *Log)SetFormat(format string) *Log {
+	l.Format = Format(format)
 	return l
 }
 
 //设置默认值
 func (l *Log) initZlog()  {
 	if l.Path == ""{
-		l.Path = "logs"
+		l.SetPath("logs")
 	}
 	if l.File == ""{
 		l.SetFile("log")
@@ -113,12 +119,12 @@ func (l *Log) initZlog()  {
 		log.Fatalln(err)
 	}
 	if l.Age <= 0{
-		l.SetAge(time.Hour*24)
+		l.SetAge(24)
 	}
 	if l.Rotation <= 0{
-		l.SetRotation(time.Hour*24)
+		l.SetRotation(24)
 	}
 	if l.Format == ""{
-		l.SetFormat(Text)
+		l.SetFormat("text")
 	}
 }

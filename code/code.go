@@ -1,18 +1,41 @@
 package code
 
-import "net/http"
+//go:generate stringer -type=TLSType
+type TLSType uint16
 
-func GetCode(err error,code int64) int64  {
-	if err != nil{
-		return code
-	}else{
-		return http.StatusOK
-	}
-}
+const (
+	REQUEST_OK          TLSType = 0x0000
+	MYSQL_CONNECT_ERROR TLSType = 0x0001
+	MYSQL_CLOSE_ERROR   TLSType = 0x0002
+	MYSQL_ERROR   TLSType = 0x0003
+	MYSQL_NO_RESULT     TLSType = 0x0004
 
-func GetMessage(err error) string{
-	if err != nil{
-		return err.Error()
-	}
-	return ""
-}
+
+	REQUEST_PARAM_ERROR TLSType = 0x0010
+	REQUEST_ERROR TLSType = 0x0011
+
+
+	SERVER_ERROR        TLSType = 0x0020
+
+
+	REMOTE_GRPC_CONNECT_ERROR   TLSType = 0x0030
+	REMOTE_GRPC_TIMEOUT_ERROR   TLSType = 0x0031
+	REMOTE_GRPC_ERROR   TLSType = 0x0032
+
+	REDIS_CONNECT_ERROR   TLSType = 0x0040
+	REDIS_CLOSE_ERROR   TLSType = 0x0041
+	REDIS_ERROR   TLSType = 0x0041
+
+	ETCD_PARAM_ERROR TLSType = 0x0050
+	ETCD_READ_ERROR TLSType = 0x0051
+	ETCD_WRITE_ERROR TLSType = 0x0052
+	ETCD_DELETE_ERROR TLSType = 0x0053
+	ETCD_HEART_ERROR TLSType = 0x0054
+	ETCD_REGISTER_ERROR TLSType = 0x0055
+	ETCD_UNREGISTER_ERROR TLSType = 0x0056
+
+	LOG_WRITE_ERROR  TLSType = 0x0060
+	LOG_NO_DISK_ERROR  TLSType = 0x0061
+
+	UNKNOWN_ERROR   TLSType = 0xffff
+)

@@ -21,13 +21,13 @@ type Etcd struct {
 	client etcdv3.Client
 }
 
-func NewEtcd(prefix, serverAddress string, etcdAddr ...string) *Etcd {
+func NewEtcd(prefix, serverAddress string, dialTimeout, dialKeepAlive int64 ,etcdAddr ...string) *Etcd {
 	return &Etcd{
 		Prefix:            prefix,
 		ServerAddress:     serverAddress,
 		EtcdServerAddress: etcdAddr,
-		DialTimeout:       3000,
-		DialKeepAlive:     3000,
+		DialTimeout:       time.Duration(dialTimeout) ,
+		DialKeepAlive:     time.Duration(dialKeepAlive),
 	}
 }
 
