@@ -32,8 +32,10 @@ func (t *toml) InitToml() *Config {
 		_,err := conf.Mysql.NewConnection()
 		if err != nil{
 			conf.GetLog().Zlog().Error(zerr.NewZErr(code.MYSQL_CONNECT_ERROR,err.Error()).String())
+			conf.GetLog().Zlog().WithField("init", "mysql").Error("mysql 连接失败")
+		}else{
+			conf.GetLog().Zlog().WithField("init", "mysql").Info("mysql 连接成功")
 		}
-		conf.GetLog().Zlog().WithField("init", "mysql").Info("mysql 连接成功")
 	} else {
 		conf.GetLog().Zlog().WithField("init", "mysql").Warn("mysql子项 未配置")
 	}

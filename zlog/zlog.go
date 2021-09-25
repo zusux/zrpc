@@ -60,7 +60,6 @@ func (l *Log) Zlog() *logrus.Logger{
 				logrus.FatalLevel: writer,
 				logrus.PanicLevel: writer,
 			},&logrus.TextFormatter{
-				ForceColors:true,
 				TimestampFormat:"2006-01-02 15:03:04",
 			})
 			loger.AddHook(lfHook)
@@ -72,7 +71,9 @@ func (l *Log) Zlog() *logrus.Logger{
 				logrus.ErrorLevel: writer,
 				logrus.FatalLevel: writer,
 				logrus.PanicLevel: writer,
-			},&logrus.JSONFormatter{})
+			},&logrus.JSONFormatter{
+				TimestampFormat:"2006-01-02 15:03:04",
+			})
 			loger.AddHook(lfHook)
 		}
 

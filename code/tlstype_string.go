@@ -31,6 +31,10 @@ func _() {
 	_ = x[ETCD_UNREGISTER_ERROR-86]
 	_ = x[LOG_WRITE_ERROR-96]
 	_ = x[LOG_NO_DISK_ERROR-97]
+	_ = x[CONFIG_FLAG_USAGED_ERROR-112]
+	_ = x[CONFIG_FILE_LOADING_ERROR-113]
+	_ = x[CONFIG_LOADING_ERROR-114]
+	_ = x[CONFIG_GET_CURRENT_FILE_ERROR-115]
 	_ = x[UNKNOWN_ERROR-65535]
 }
 
@@ -42,7 +46,8 @@ const (
 	_TLSType_name_4 = "REDIS_CONNECT_ERRORREDIS_CLOSE_ERROR"
 	_TLSType_name_5 = "ETCD_PARAM_ERRORETCD_READ_ERRORETCD_WRITE_ERRORETCD_DELETE_ERRORETCD_HEART_ERRORETCD_REGISTER_ERRORETCD_UNREGISTER_ERROR"
 	_TLSType_name_6 = "LOG_WRITE_ERRORLOG_NO_DISK_ERROR"
-	_TLSType_name_7 = "UNKNOWN_ERROR"
+	_TLSType_name_7 = "CONFIG_FLAG_USAGED_ERRORCONFIG_FILE_LOADING_ERRORCONFIG_LOADING_ERRORCONFIG_GET_CURRENT_FILE_ERROR"
+	_TLSType_name_8 = "UNKNOWN_ERROR"
 )
 
 var (
@@ -52,6 +57,7 @@ var (
 	_TLSType_index_4 = [...]uint8{0, 19, 36}
 	_TLSType_index_5 = [...]uint8{0, 16, 31, 47, 64, 80, 99, 120}
 	_TLSType_index_6 = [...]uint8{0, 15, 32}
+	_TLSType_index_7 = [...]uint8{0, 24, 49, 69, 98}
 )
 
 func (i TLSType) String() string {
@@ -75,8 +81,11 @@ func (i TLSType) String() string {
 	case 96 <= i && i <= 97:
 		i -= 96
 		return _TLSType_name_6[_TLSType_index_6[i]:_TLSType_index_6[i+1]]
+	case 112 <= i && i <= 115:
+		i -= 112
+		return _TLSType_name_7[_TLSType_index_7[i]:_TLSType_index_7[i+1]]
 	case i == 65535:
-		return _TLSType_name_7
+		return _TLSType_name_8
 	default:
 		return "TLSType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}

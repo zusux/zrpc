@@ -30,10 +30,6 @@ func initConfigByToml()  {
 	conf = t.InitToml()
 }
 
-func initConfigByYaml()  {
-	y := &yaml{}
-	conf = y.InitYaml()
-}
 
 func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis,etcd *zetcd.Etcd) *Config {
 	return &Config{

@@ -66,12 +66,14 @@ func (m *Mysql) GetDb() *gorm.DB {
 	if err := db.DB().Ping(); err != nil {
 		err = db.Close()
 		if err != nil{
-			m.logger.Warn(zerr.NewZErr(code.MYSQL_CLOSE_ERROR,err.Error()).String())
+			zrr := zerr.NewZErr(code.MYSQL_CLOSE_ERROR,err.Error())
+			m.logger.Warn(zrr.String())
 		}
 		db,err = m.NewConnection()
 		if err != nil{
-			m.logger.Error(zerr.NewZErr(code.MYSQL_CONNECT_ERROR,err.Error()).String())
-			panic(err)
+			zrr := zerr.NewZErr(code.MYSQL_CONNECT_ERROR,err.Error())
+			m.logger.Error(zrr.String())
+			panic(zrr)
 		}
 	}
 	return db

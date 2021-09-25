@@ -1,4 +1,4 @@
-package zrpc
+package main
 
 import (
 	"github.com/jinzhu/gorm"
@@ -7,7 +7,7 @@ import (
 	"github.com/zusux/zrpc/micro/zetcd"
 )
 
-func Init()  {
+func main()  {
 	config.InitConfig()
 }
 
