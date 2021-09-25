@@ -35,6 +35,8 @@ func _() {
 	_ = x[CONFIG_FILE_LOADING_ERROR-113]
 	_ = x[CONFIG_LOADING_ERROR-114]
 	_ = x[CONFIG_GET_CURRENT_FILE_ERROR-115]
+	_ = x[PWD_DIR_NOT_FIND_ERROR-128]
+	_ = x[EXECUTABLE_DIR_NOT_FIND_ERROR-128]
 	_ = x[UNKNOWN_ERROR-65535]
 }
 
@@ -47,7 +49,8 @@ const (
 	_TLSType_name_5 = "ETCD_PARAM_ERRORETCD_READ_ERRORETCD_WRITE_ERRORETCD_DELETE_ERRORETCD_HEART_ERRORETCD_REGISTER_ERRORETCD_UNREGISTER_ERROR"
 	_TLSType_name_6 = "LOG_WRITE_ERRORLOG_NO_DISK_ERROR"
 	_TLSType_name_7 = "CONFIG_FLAG_USAGED_ERRORCONFIG_FILE_LOADING_ERRORCONFIG_LOADING_ERRORCONFIG_GET_CURRENT_FILE_ERROR"
-	_TLSType_name_8 = "UNKNOWN_ERROR"
+	_TLSType_name_8 = "PWD_DIR_NOT_FIND_ERROR"
+	_TLSType_name_9 = "UNKNOWN_ERROR"
 )
 
 var (
@@ -84,8 +87,10 @@ func (i TLSType) String() string {
 	case 112 <= i && i <= 115:
 		i -= 112
 		return _TLSType_name_7[_TLSType_index_7[i]:_TLSType_index_7[i+1]]
-	case i == 65535:
+	case i == 128:
 		return _TLSType_name_8
+	case i == 65535:
+		return _TLSType_name_9
 	default:
 		return "TLSType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
