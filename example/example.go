@@ -12,14 +12,14 @@ import (
 )
 //log 
 func main() {
-	os.Setenv("ENV_FILE","./../env/env.yaml") //env配置文件实际位置
+	os.Setenv("ENV_FILE","./../env/env.toml") //env配置文件实际位置
 	zrpc.Init()
 	zrpc.GetLog().Info("hello")
 }
 
 //gorm
 func main2()  {
-	os.Setenv("ENV_FILE","./../env/env.yaml")  //env配置文件实际位置
+	os.Setenv("ENV_FILE","./../env/env.toml")  //env配置文件实际位置
 	zrpc.Init()
 	gorm := zrpc.GetDb()
 	type Book struct {
@@ -34,7 +34,7 @@ func main2()  {
 
 //etcd grpc
 func main3()  {
-	os.Setenv("ENV_FILE","./../env/env.yaml") //env配置文件实际位置
+	os.Setenv("ENV_FILE","./../env/env.toml") //env配置文件实际位置
 	zrpc.Init()
 	zrpc.GetEtcd().Register()
 	doReq()

@@ -10,20 +10,23 @@ import (
 	"github.com/zusux/zrpc/code"
 	"github.com/zusux/zrpc/zerr"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"time"
 )
+
 var K = koanf.New(".")
-func LoadToml()  {
+
+func LoadToml() {
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 	f.Usage = func() {
 		fmt.Println(f.FlagUsages())
-		panic(zerr.NewZErr(code.CONFIG_FLAG_USAGED_ERROR,"config flag has usaged"))
+		panic(zerr.NewZErr(code.CONFIG_FLAG_USAGED_ERROR, "config flag has usaged"))
 	}
 	envFilepath := os.Getenv("env.path")
-	if envFilepath == ""{
-		envFilepath = GetCurrentDir()+"/"+"env.toml"
+	if envFilepath == "" {
+		//默认路径
+		envFilepath = GetWdDir() + "/env/" + "env.toml"
 	}
 	// Path to one or more config files to load into koanf along with some config params.
 	f.StringSlice("conf", []string{envFilepath}, "path to one or more .toml config files")
@@ -34,7 +37,7 @@ func LoadToml()  {
 	cFiles, _ := f.GetStringSlice("conf")
 	for _, c := range cFiles {
 		if err := K.Load(file.Provider(c), toml.Parser()); err != nil {
-			panic(zerr.NewZErr(code.CONFIG_FILE_LOADING_ERROR,err.Error()))
+			panic(zerr.NewZErr(code.CONFIG_FILE_LOADING_ERROR, err.Error()))
 		}
 	}
 	// "time" and "type" may have been loaded from the config file, but
@@ -44,7 +47,7 @@ func LoadToml()  {
 	// line flag values that are not present in conf maps from previously loaded
 	// providers.
 	if err := K.Load(posflag.Provider(f, ".", K), nil); err != nil {
-		panic(zerr.NewZErr(code.CONFIG_LOADING_ERROR,fmt.Sprintf("error loading config: %v", err)))
+		panic(zerr.NewZErr(code.CONFIG_LOADING_ERROR, fmt.Sprintf("error loading config: %v", err)))
 	}
 }
 
@@ -52,7 +55,23 @@ func LoadToml()  {
 func GetCurrentDir() string {
 	_, file, _, ok := runtime.Caller(1)
 	if !ok {
-		panic(zerr.NewZErr(code.CONFIG_GET_CURRENT_FILE_ERROR,"Can not get current file info"))
+		panic(zerr.NewZErr(code.CONFIG_GET_CURRENT_FILE_ERROR, "Can not get current file info"))
 	}
-	return path.Dir(file)
+	return filepath.Dir(file)
+}
+
+func GetExecutableDir() string {
+	fp, err := os.Executable()
+	if err != nil{
+		panic(zerr.NewZErr(code.EXECUTABLE_DIR_NOT_FIND_ERROR, fmt.Sprintf("executable path not find: %v", err)))
+	}
+	return filepath.Dir(fp)
+}
+
+func GetWdDir() string {
+	fd, err := os.Getwd()
+	if err != nil{
+		panic(zerr.NewZErr(code.PWD_DIR_NOT_FIND_ERROR, fmt.Sprintf("pwd dir not find: %v", err)))
+	}
+	return fd
 }
