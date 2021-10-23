@@ -21,9 +21,9 @@ type Etcd struct {
 	client etcdv3.Client
 }
 
-func NewEtcd(prefix, serverAddress string, dialTimeout, dialKeepAlive int64 ,etcdAddr ...string) *Etcd {
+func NewEtcd(serverName, serverAddress string, dialTimeout, dialKeepAlive int64 ,etcdAddr ...string) *Etcd {
 	return &Etcd{
-		Prefix:            prefix,
+		Prefix:            serverName,
 		ServerAddress:     serverAddress,
 		EtcdServerAddress: etcdAddr,
 		DialTimeout:       time.Duration(dialTimeout) ,
@@ -91,7 +91,37 @@ func (e *Etcd) Register() {
 func (e *Etcd) UnRegister() error {
 	return e.client.Deregister(e.service)
 }
-// grpc请求
+
+//外部服务 grpc请求
+func (e *Etcd) GrpcRequestRemote(ctx context.Context, serverName string, req interface{}, reqFactory sd.Factory) (response interface{}, err error) {
+	logger := log.NewNopLogger()
+	//创建实例管理器, 此管理器会Watch监听etc中prefix的目录变化更新缓存的服务实例数据
+	instancer, err := etcdv3.NewInstancer(e.client, serverName, logger)
+	if err != nil {
+		return nil,err
+	}
+	//创建端点管理器， 此管理器根据Factory和监听的到实例创建endPoint并订阅instancer的变化动态更新Factory创建的endPoint
+	endpointer := sd.NewEndpointer(instancer, reqFactory, logger) //reqFactory自定义的函数，主要用于端点层（endpoint）接受并显示数据
+	//创建负载均衡器
+	balancer := lb.NewRoundRobin(endpointer)
+
+	/**
+	我们可以通过负载均衡器直接获取请求的endPoint，发起请求
+	reqEndPoint,_ := balancer.Endpoint()
+	*/
+
+	/**
+	也可以通过retry定义尝试次数进行请求
+	*/
+	reqEndPoint := lb.Retry(3, 3*time.Second, balancer)
+
+	//现在我们可以通过 endPoint 发起请求了
+	response, err = reqEndPoint(ctx, req)
+	return
+}
+
+
+// 内部服务 grpc请求
 func (e *Etcd) GrpcRequest(ctx context.Context, req interface{}, reqFactory sd.Factory) (response interface{}, err error) {
 	logger := log.NewNopLogger()
 	//创建实例管理器, 此管理器会Watch监听etc中prefix的目录变化更新缓存的服务实例数据
