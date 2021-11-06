@@ -2,12 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/zusux/zrpc/code"
-	"github.com/zusux/zrpc/env"
-	"github.com/zusux/zrpc/micro/zetcd"
-	"github.com/zusux/zrpc/model/zdb"
-	"github.com/zusux/zrpc/model/zredis"
 	"github.com/zusux/zrpc/zerr"
+	"github.com/zusux/zrpc/env"
+	"github.com/zusux/zrpc/net/zetcd"
+	"github.com/zusux/zrpc/net/zdb"
+	"github.com/zusux/zrpc/net/zredis"
 	"github.com/zusux/zrpc/zlog"
 )
 
@@ -31,7 +30,7 @@ func (t *toml) InitToml() *Config {
 		}
 		_,err := conf.Mysql.NewConnection()
 		if err != nil{
-			conf.GetLog().Zlog().Error(zerr.NewZErr(code.MYSQL_CONNECT_ERROR,err.Error()).String())
+			conf.GetLog().Zlog().Error(zerr.NewZErr(zerr.MYSQL_CONNECT_ERROR,err.Error()).String())
 			conf.GetLog().Zlog().WithField("init", "mysql").Error("mysql 连接失败")
 		}else{
 			conf.GetLog().Zlog().WithField("init", "mysql").Info("mysql 连接成功")
@@ -97,6 +96,8 @@ func (t *toml) initEtcdConfig() *zetcd.Etcd {
 	)
 	return etcd
 }
+
+
 
 func (t *toml) getGrpcServerAddress() string {
 	return fmt.Sprintf("%s:%d", env.K.String("server.grpc.host"), env.K.Int("server.grpc.port"))

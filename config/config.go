@@ -1,9 +1,9 @@
 package config
 
 import (
-	"github.com/zusux/zrpc/micro/zetcd"
-	"github.com/zusux/zrpc/model/zdb"
-	"github.com/zusux/zrpc/model/zredis"
+	"github.com/zusux/zrpc/net/zetcd"
+	"github.com/zusux/zrpc/net/zdb"
+	"github.com/zusux/zrpc/net/zredis"
 	"github.com/zusux/zrpc/zlog"
 )
 

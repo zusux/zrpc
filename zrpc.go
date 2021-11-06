@@ -4,7 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/zusux/zrpc/config"
-	"github.com/zusux/zrpc/micro/zetcd"
+	"github.com/zusux/zrpc/net/zetcd"
 )
 
 func Init()  {

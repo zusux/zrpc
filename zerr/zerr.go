@@ -2,16 +2,15 @@ package zerr
 
 import (
 	"fmt"
-	"github.com/zusux/zrpc/code"
 )
 
 type Zerr struct {
-	Status code.TLSType
-	Code string
+	Status  TLSType
+	Code    string
 	Message string
 }
 
-func NewZErr(status code.TLSType, message string) *Zerr  {
+func NewZErr(status TLSType, message string) *Zerr  {
 	return &Zerr{
 		Status: status,
 		Code: status.String(),
@@ -27,7 +26,7 @@ func (z *Zerr) String() string  {
 	return fmt.Sprintf(`status=%d code=%s message=%s`,z.Status,z.Code,z.Message)
 }
 
-func (z *Zerr) GetStatus() code.TLSType {
+func (z *Zerr) GetStatus() TLSType {
 	return z.Status
 }
 
