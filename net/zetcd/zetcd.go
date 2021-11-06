@@ -54,8 +54,8 @@ func (e *Etcd) AddEtcdServerAddress(addr ...string) *Etcd {
 }
 
 //设置路径
-func (e *Etcd) SetPrefix(prefix string) *Etcd {
-	e.Prefix = prefix
+func (e *Etcd) SetPrefix(serverName string) *Etcd {
+	e.ServerName = serverName
 	return e
 }
 
