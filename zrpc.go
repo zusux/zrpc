@@ -7,7 +7,7 @@ import (
 	"github.com/zusux/zrpc/net/zetcd"
 )
 
-func Init()  {
+func Init() {
 	config.InitConfig()
 }
 
@@ -23,6 +23,6 @@ func GetConf() *config.Config {
 	return config.GetConfig()
 }
 
-func GetEtcd() *zetcd.Etcd {
-	return config.GetConfig().GetEtcd()
+func GetPublishes() []*zetcd.Etcd {
+	return config.GetConfig().GetPublishes()
 }

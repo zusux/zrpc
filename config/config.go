@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/zusux/zrpc/net/zetcd"
 	"github.com/zusux/zrpc/net/zdb"
+	"github.com/zusux/zrpc/net/zetcd"
 	"github.com/zusux/zrpc/net/zredis"
 	"github.com/zusux/zrpc/zlog"
 )
@@ -10,14 +10,14 @@ import (
 var conf *Config
 
 type Config struct {
-	Mysql *zdb.Mysql
-	Log *zlog.Log
-	Redis *zredis.Redis
-	Etcd  *zetcd.Etcd
-	C *map[string]interface{}
+	Mysql     *zdb.Mysql
+	Log       *zlog.Log
+	Redis     *zredis.Redis
+	Publishes []*zetcd.Etcd
+	C         *map[string]interface{}
 }
 
-func InitConfig()  {
+func InitConfig() {
 	initConfigByToml()
 }
 
@@ -25,18 +25,17 @@ func GetConfig() *Config {
 	return conf
 }
 
-func initConfigByToml()  {
+func initConfigByToml() {
 	t := &toml{}
 	conf = t.InitToml()
 }
 
-
-func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis,etcd *zetcd.Etcd) *Config {
+func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis, publishes []*zetcd.Etcd) *Config {
 	return &Config{
-		Log: log,
-		Mysql: mysql,
-		Redis: redis,
-		Etcd: etcd,
+		Log:       log,
+		Mysql:     mysql,
+		Redis:     redis,
+		Publishes: publishes,
 	}
 }
 
@@ -49,6 +48,6 @@ func (c *Config) GetRedis() *zredis.Redis {
 func (c *Config) GetLog() *zlog.Log {
 	return c.Log
 }
-func (c *Config) GetEtcd() *zetcd.Etcd {
-	return c.Etcd
+func (c *Config) GetPublishes() []*zetcd.Etcd {
+	return c.Publishes
 }
