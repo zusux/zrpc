@@ -19,39 +19,39 @@ func (t *toml) InitToml() *Config {
 	log := t.initLogConfig()
 	mysql := t.initMysqlConfig()
 	redis := t.initRedisConfig()
-	publishes := t.initPublishConfig()
+	publishes := t.initPublishConfig(log)
 	conf := newConfig(log, mysql, redis, publishes)
 	//初始化日志
-	conf.GetLog().Zlog().WithField("init", "config").Info("开启日志成功")
+	log.Zlog().WithField("init", "config").Info("开启日志成功")
 
 	if mysql.Host != "" && mysql.Port > 0 && mysql.Username != "" && mysql.Database != "" {
 		//设置日志模式
 		conf.Mysql.SetLoger(conf.GetLog().Zlog())
 		if mysql.Debug {
-			conf.GetLog().Zlog().WithField("init", "mysql").Warn("mysql 开启debug模式")
+			log.Zlog().WithField("init", "mysql").Warn("mysql 开启debug模式")
 		}
 		_, err := conf.Mysql.NewConnection()
 		if err != nil {
-			conf.GetLog().Zlog().Error(zerr.NewZErr(zerr.MYSQL_CONNECT_ERROR, err.Error()).String())
-			conf.GetLog().Zlog().WithField("init", "mysql").Error("mysql 连接失败")
+			log.Zlog().Error(zerr.NewZErr(zerr.MYSQL_CONNECT_ERROR, err.Error()).String())
+			log.Zlog().WithField("init", "mysql").Error("mysql 连接失败")
 		} else {
-			conf.GetLog().Zlog().WithField("init", "mysql").Info("mysql 连接成功")
+			log.Zlog().WithField("init", "mysql").Info("mysql 连接成功")
 		}
 	} else {
-		conf.GetLog().Zlog().WithField("init", "mysql").Warn("mysql子项 未配置")
+		log.Zlog().WithField("init", "mysql").Warn("mysql子项 未配置")
 	}
 
 	if redis.Host != "" && redis.Port > 0 {
 		// redis 初始化
-		conf.GetLog().Zlog().WithField("init", "redis").Info("初始化redis配置成功")
+		log.Zlog().WithField("init", "redis").Info("初始化redis配置成功")
 	} else {
-		conf.GetLog().Zlog().WithField("init", "redis").Warn("redis 未配置")
+		log.Zlog().WithField("init", "redis").Warn("redis 未配置")
 	}
 
 	if len(env.K.Strings("etcd.etcd_server_address")) > 0 && len(publishes) > 0 {
-		conf.GetLog().Zlog().WithField("init", "etcd").Info("初始化Etcd配置成功")
+		log.Zlog().WithField("init", "etcd").Info("初始化Etcd配置成功")
 	} else {
-		conf.GetLog().Zlog().WithField("init", "etcd").Warn("etcd 未配置")
+		log.Zlog().WithField("init", "etcd").Warn("etcd 未配置")
 	}
 	return conf
 }
@@ -92,16 +92,16 @@ func getRegList() {
 	env.K.MapKeys("zrpc")
 }
 
-func (t *toml) initPublishConfig() (publishes []*zetcd.Etcd) {
+func (t *toml) initPublishConfig(log *zlog.Log) (publishes Pubs) {
 	var servers map[string]zetcd.Server
 	env.K.Unmarshal("zrpc", &servers)
 	ip, err := utils.GetLocalIP()
 	if err != nil {
-		conf.GetLog().Zlog().WithField("init", "publish").Error("获取本地ip失败, 注册未成功")
+		log.Zlog().WithField("init", "publish").Error("获取本地ip失败, 注册未成功")
 		return
 	}
 	var localIp = ip.String()
-	conf.GetLog().Zlog().WithField("init", "publish").Debug(fmt.Sprintf("获取本地 ip: %s", localIp))
+	log.Zlog().WithField("init", "publish").Debug(fmt.Sprintf("获取本地 ip: %s", localIp))
 	for publishType, server := range servers {
 		if server.Publish {
 			etcd := t.initEtcdConfig(localIp, publishType, server.Port)

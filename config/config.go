@@ -9,11 +9,24 @@ import (
 
 var conf *Config
 
+type Pubs []*zetcd.Etcd
+
+func (p *Pubs) Register()  {
+	for _,v :=range *p{
+		v.Register()
+	}
+}
+func (p *Pubs) UnRegister()  {
+	for _,v :=range *p{
+		v.UnRegister()
+	}
+}
+
 type Config struct {
 	Mysql     *zdb.Mysql
 	Log       *zlog.Log
 	Redis     *zredis.Redis
-	Publishes []*zetcd.Etcd
+	Pubs  Pubs
 	C         *map[string]interface{}
 }
 
@@ -35,7 +48,7 @@ func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis, publishes [
 		Log:       log,
 		Mysql:     mysql,
 		Redis:     redis,
-		Publishes: publishes,
+		Pubs: publishes,
 	}
 }
 
@@ -48,6 +61,6 @@ func (c *Config) GetRedis() *zredis.Redis {
 func (c *Config) GetLog() *zlog.Log {
 	return c.Log
 }
-func (c *Config) GetPublishes() []*zetcd.Etcd {
-	return c.Publishes
+func (c *Config) GetPubs() Pubs {
+	return c.Pubs
 }
