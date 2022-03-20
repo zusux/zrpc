@@ -9,25 +9,12 @@ import (
 
 var conf *Config
 
-type Pubs []*zetcd.Etcd
-
-func (p *Pubs) Register()  {
-	for _,v :=range *p{
-		v.Register()
-	}
-}
-func (p *Pubs) UnRegister()  {
-	for _,v :=range *p{
-		v.UnRegister()
-	}
-}
-
 type Config struct {
-	Mysql     *zdb.Mysql
-	Log       *zlog.Log
-	Redis     *zredis.Redis
-	Pubs  Pubs
-	C         *map[string]interface{}
+	Mysql *zdb.Mysql
+	Log   *zlog.Log
+	Redis *zredis.Redis
+	Pubs  zetcd.Pubs
+	C     *map[string]interface{}
 }
 
 func InitConfig() {
@@ -43,12 +30,12 @@ func initConfigByToml() {
 	conf = t.InitToml()
 }
 
-func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis, publishes []*zetcd.Etcd) *Config {
+func newConfig(log *zlog.Log, mysql *zdb.Mysql, redis *zredis.Redis, publishes map[string]*zetcd.Etcd) *Config {
 	return &Config{
-		Log:       log,
-		Mysql:     mysql,
-		Redis:     redis,
-		Pubs: publishes,
+		Log:   log,
+		Mysql: mysql,
+		Redis: redis,
+		Pubs:  publishes,
 	}
 }
 
@@ -61,6 +48,6 @@ func (c *Config) GetRedis() *zredis.Redis {
 func (c *Config) GetLog() *zlog.Log {
 	return c.Log
 }
-func (c *Config) GetPubs() Pubs {
+func (c *Config) GetPubs() zetcd.Pubs {
 	return c.Pubs
 }

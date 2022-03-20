@@ -58,7 +58,7 @@ func main_grpc() {
 
 func doReq() {
 	var req interface{}
-	zrpc.GetEtcd().GrpcRequest(context.Background(), req, reqFactory)
+	zrpc.GetEtcd().RequestLocal(context.Background(), "grpc",req, reqFactory)
 }
 
 //通过传入的 实例地址  创建对应的请求endPoint

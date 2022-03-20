@@ -92,7 +92,8 @@ func getRegList() {
 	env.K.MapKeys("zrpc")
 }
 
-func (t *toml) initPublishConfig(log *zlog.Log) (publishes Pubs) {
+func (t *toml) initPublishConfig(log *zlog.Log) (publishes zetcd.Pubs) {
+	publishes = make(map[string]*zetcd.Etcd,0)
 	var servers map[string]zetcd.Server
 	env.K.Unmarshal("zrpc", &servers)
 	ip, err := utils.GetLocalIP()
@@ -105,7 +106,7 @@ func (t *toml) initPublishConfig(log *zlog.Log) (publishes Pubs) {
 	for publishType, server := range servers {
 		if server.Publish {
 			etcd := t.initEtcdConfig(localIp, publishType, server.Port)
-			publishes = append(publishes, etcd)
+			publishes[publishType] = etcd
 		}
 	}
 	return
@@ -113,7 +114,8 @@ func (t *toml) initPublishConfig(log *zlog.Log) (publishes Pubs) {
 
 func (t *toml) initEtcdConfig(localIp string, publishType string, port int) *zetcd.Etcd {
 	return zetcd.NewEtcd(
-		strings.TrimRight(env.K.String("server.name"), "/")+"/"+publishType,
+		strings.TrimRight(env.K.String("server.name"), "/"),
+		publishType,
 		t.getServerAddr(localIp, port),
 		env.K.Int64("etcd.dial_timeout"),
 		env.K.Int64("etcd.dial_keep_alive"),

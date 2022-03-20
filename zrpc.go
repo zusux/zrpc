@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/zusux/zrpc/config"
+	"github.com/zusux/zrpc/net/zetcd"
 )
 
 func Init() {
@@ -22,6 +23,6 @@ func GetConf() *config.Config {
 	return config.GetConfig()
 }
 
-func GetEtcd() config.Pubs {
+func GetEtcd() zetcd.Pubs {
 	return config.GetConfig().GetPubs()
 }
