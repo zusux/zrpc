@@ -1,0 +1,11 @@
+syntax = "proto3";
+package protobuf;
+option go_package = "zrpc/pb_value;pb_value";
+message InfoValue {
+  optional string kind = 1 ;  //grpc,http
+  optional string ip = 2 ;      //服务注册ip
+  optional uint32  port = 3 ;     //服务注册端口
+  optional uint32 status = 4; //流量统计
+  optional uint32 request_flow = 5; //流量统计
+  optional uint32 UpdatedAt = 6; //更新时间
+}
