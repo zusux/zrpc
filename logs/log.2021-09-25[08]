@@ -1,5 +1,0 @@
-{"init":"config","level":"info","msg":"开启日志成功","time":"2021-09-25 09:09:37"}
-{"init":"mysql","level":"warning","msg":"mysql 开启debug模式","time":"2021-09-25 09:09:37"}
-{"init":"mysql","level":"info","msg":"mysql 连接成功","time":"2021-09-25 09:09:37"}
-{"init":"redis","level":"info","msg":"初始化redis配置成功","time":"2021-09-25 09:09:37"}
-{"init":"etcd","level":"info","msg":"初始化Etcd配置成功","time":"2021-09-25 09:09:37"}
