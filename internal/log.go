@@ -1,4 +1,4 @@
-package zrpc
+package internal
 
 import (
 	"fmt"
@@ -9,8 +9,12 @@ import (
 	"log"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
+
+var once sync.Once
+var loger *logrus.Logger
 
 type zlog struct {
 	filepath string
@@ -18,6 +22,14 @@ type zlog struct {
 	age      int64
 	rotation int64
 	loger  *logrus.Logger
+}
+
+func init()  {
+	loger = NewLog("log.default_log").loger
+}
+
+func Log() *logrus.Logger {
+	return loger
 }
 
 func NewLog( logSection string) *zlog  {

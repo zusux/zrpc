@@ -3,7 +3,7 @@ package zetcd
 import (
 	"errors"
 	"fmt"
-	"github.com/zusux/zrpc/proto/pb_value"
+	"github.com/zusux/zrpc/internal/proto/pb_value"
 	"google.golang.org/protobuf/proto"
 	"net"
 	"regexp"

@@ -1,4 +1,4 @@
-package zrpc
+package internal
 
 type Redis struct{
 	Host string

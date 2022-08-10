@@ -1,7 +1,7 @@
-package zrpc
+package internal
 
 import (
-	"github.com/zusux/zrpc/utils"
+	"github.com/zusux/zrpc/internal/utils"
 )
 
 
@@ -19,7 +19,7 @@ type Server struct {
 	Listen map[string]Pub
 }
 
-func getServer() (*Server, error) {
+func GetServer() (*Server, error) {
 	svr := Server{}
 	// Quick unmarshal.
 	err := K.Unmarshal("server", &svr)

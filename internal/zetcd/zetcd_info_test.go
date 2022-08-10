@@ -192,7 +192,7 @@ func TestValueInfo_EncodeValue(t *testing.T) {
 		Port        uint32
 		Status      uint32
 		RequestFlow uint32
-		UpdatedAt   uint32
+		UpdatedAt   int64
 	}
 	tests := []struct {
 		name    string
@@ -220,7 +220,7 @@ func TestValueInfo_EncodeValue(t *testing.T) {
 				Kind:        tt.fields.Kind,
 				Ip:          tt.fields.Ip,
 				Port:        tt.fields.Port,
-				Status:      tt.fields.Status,
+				Status:      STATUS(tt.fields.Status),
 				RequestFlow: tt.fields.RequestFlow,
 				UpdatedAt:   tt.fields.UpdatedAt,
 			}
@@ -243,7 +243,7 @@ func TestValueInfo_SetRegisterAddress(t *testing.T) {
 		Port        uint32
 		Status      uint32
 		RequestFlow uint32
-		UpdatedAt   uint32
+		UpdatedAt   int64
 	}
 	type args struct {
 		address string
@@ -273,7 +273,7 @@ func TestValueInfo_SetRegisterAddress(t *testing.T) {
 				Kind:        tt.fields.Kind,
 				Ip:          tt.fields.Ip,
 				Port:        tt.fields.Port,
-				Status:      tt.fields.Status,
+				Status:      STATUS(tt.fields.Status),
 				RequestFlow: tt.fields.RequestFlow,
 				UpdatedAt:   tt.fields.UpdatedAt,
 			}
@@ -337,9 +337,9 @@ func TestValueInfo_getRegisterValue(t *testing.T) {
 		Kind        string
 		Ip          string
 		Port        uint32
-		Status      uint32
+		Status      STATUS
 		RequestFlow uint32
-		UpdatedAt   uint32
+		UpdatedAt   int64
 	}
 	tests := []struct {
 		name   string
@@ -381,9 +381,9 @@ func TestValueInfo_setIp(t *testing.T) {
 		Kind        string
 		Ip          string
 		Port        uint32
-		Status      uint32
+		Status      STATUS
 		RequestFlow uint32
-		UpdatedAt   uint32
+		UpdatedAt   int64
 	}
 	type args struct {
 		ip string
@@ -421,9 +421,9 @@ func TestValueInfo_setPort(t *testing.T) {
 		Kind        string
 		Ip          string
 		Port        uint32
-		Status      uint32
+		Status      STATUS
 		RequestFlow uint32
-		UpdatedAt   uint32
+		UpdatedAt   int64
 	}
 	type args struct {
 		port uint32

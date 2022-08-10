@@ -1,9 +1,9 @@
-package zrpc
+package internal
 
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/zusux/zrpc/zerr"
+	"github.com/zusux/zrpc/internal/zerr"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

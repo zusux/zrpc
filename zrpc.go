@@ -2,48 +2,42 @@ package zrpc
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/zusux/zrpc/internal"
 	"gorm.io/gorm"
 	"sync"
 )
-
 var once sync.Once
-var loger *logrus.Logger
 var config *Config
-
+var NewError  = internal.NewError
 type Config struct {
-	Server *Server
-	Reg    *Reg
+	Server *internal.Server
+	Reg    *internal.Reg
 	Db    *gorm.DB
 	Log   *logrus.Logger
 }
 
-func init()  {
+func Init()  {
 	once.Do(func() {
-		Init()
+		config = InitConfig()
 	})
 }
 
-func Init() {
-	loger = NewLog("log.default_log").loger
-	config = InitConfig()
-}
-
 func InitConfig() *Config {
-	s, err := getServer()
+	s, err := internal.GetServer()
 	if err != nil {
-		Log().Error(err)
+		internal.Log().Error(err)
 		panic(err)
 	}
-	db,err := GetDbBySec("mysql.default_mysql")
+	db,err := internal.GetDbBySec("mysql.default_mysql")
 	if err != nil {
-		Log().Error(err)
+		internal.Log().Error(err)
 		panic(err)
 	}
 	return &Config{
 		Server: s,
 		Reg:    s.Reg(),
 		Db: db,
-		Log: Log(),
+		Log: internal.Log(),
 	}
 }
 
@@ -55,15 +49,13 @@ func GetConfig() *Config {
 func GetDb() *gorm.DB {
 	return config.Db
 }
-func Log() *logrus.Logger {
-	return loger
-}
+
 func GetLog() *logrus.Logger {
-	return Log()
+	return internal.Log()
 }
 func GetConf() *Config {
 	return config
 }
-func GetEtcd() *Reg{
+func GetEtcd() *internal.Reg{
 	return config.Reg
 }

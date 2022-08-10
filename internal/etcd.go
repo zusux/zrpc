@@ -1,11 +1,11 @@
-package zrpc
+package internal
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"github.com/go-kit/kit/sd"
-	"github.com/zusux/zrpc/zetcd"
+	"github.com/zusux/zrpc/internal/zetcd"
 	"time"
 )
 
