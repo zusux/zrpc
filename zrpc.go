@@ -9,6 +9,8 @@ import (
 var once sync.Once
 var config *Config
 var NewError  = internal.NewError
+var Log = internal.Log
+var K = internal.K
 type Config struct {
 	Server *internal.Server
 	Reg    *internal.Reg
