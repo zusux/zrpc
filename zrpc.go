@@ -10,8 +10,10 @@ import (
 var once sync.Once
 var config *Config
 var NewError  = internal.NewError
-var Log func() *logrus.Logger
+var Log  func() *logrus.Logger
+var GetLog  func() *logrus.Logger
 var K *koanf.Koanf
+var NewDb func(section string) (*gorm.DB, error)
 type Config struct {
 	Server *internal.Server
 	Reg    *internal.Reg
@@ -23,7 +25,9 @@ func Init()  {
 	once.Do(func() {
 		config = InitConfig()
 		K = internal.K
-		Log = internal.Log
+		Log  = internal.Log
+		GetLog = internal.Log
+		NewDb = internal.GetDbBySec
 	})
 }
 
@@ -32,12 +36,10 @@ func InitConfig() *Config {
 	s, err := internal.GetServer()
 	if err != nil {
 		internal.Log().Error(err)
-		panic(err)
 	}
 	db,err := internal.GetDbBySec("mysql.default_mysql")
 	if err != nil {
-		internal.Log().Error(err)
-		panic(err)
+		GetLog().Error(err)
 	}
 	return &Config{
 		Log: internal.Log(),
@@ -56,9 +58,6 @@ func GetDb() *gorm.DB {
 	return config.Db
 }
 
-func GetLog() *logrus.Logger {
-	return internal.Log()
-}
 func GetConf() *Config {
 	return config
 }

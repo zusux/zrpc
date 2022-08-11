@@ -3,10 +3,10 @@
 ```
 
 #### 初始化
+[配置文件](example/config/dev.yaml)
 ```go
-// 配置文件存放路径 默认在 执行目录/env/env.toml
+// 配置文件存放路径 默认在 执行目录/config/dev.yaml
 //设置配置文件路径
-os.SetEnv("env.config","env/env.toml")
 //初始化
 zrpc.Init()
 ```
@@ -32,6 +32,6 @@ name := zrpc.K.String("server.name")
 ```go
    etcd := zrpc.GetEtcd()
    etcd.Register()
-   etcd.GrpcRequest(ctx context.Context, req interface{}, reqFactory sd.Factory) 
+   etcd.GrpcRequestRemote(ctx context.Context,serverName string, req interface{}, reqFactory sd.Factory) 
    etcd.UnRegister()
 ```

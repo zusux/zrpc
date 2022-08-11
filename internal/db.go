@@ -132,11 +132,12 @@ func (m *Mysql) GetDb() (*gorm.DB,error) {
 	//m.NewConnection()
 	if m.zdb == nil{
 		db,err := m.NewConnection()
+		m.zdb = db
 		if err != nil{
 			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
 			m.logger.Warn(zrr.String())
+			return db,zrr
 		}
-		m.zdb = db
 	}
 	mdb,err := m.zdb.DB()
 	if  err != nil || mdb.Ping() != nil {
