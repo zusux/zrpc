@@ -7,6 +7,10 @@ import (
 	"gorm.io/gorm"
 	"sync"
 )
+
+func init()  {
+	Init()
+}
 var once sync.Once
 var config *Config
 var NewError  = internal.NewError
