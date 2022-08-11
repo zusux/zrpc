@@ -1,7 +1,8 @@
 package internal
 
 import (
-	"github.com/zusux/zrpc/internal/utils"
+	"github.com/zusux/zrpc/internal/util"
+	"log"
 )
 
 
@@ -24,7 +25,7 @@ func GetServer() (*Server, error) {
 	// Quick unmarshal.
 	err := K.Unmarshal("server", &svr)
 	if err != nil {
-		Log().Error(err)
+		log.Printf("[zrpc][error] unmarshal config err: %s",err)
 		return &svr, err
 	}
 	return &svr, nil
@@ -33,9 +34,9 @@ func GetServer() (*Server, error) {
 func (s *Server) Reg() *Reg {
 
 	if s.Ip == "" {
-		ip, err := utils.GetLocalIP()
+		ip, err := util.GetLocalIP()
 		if err != nil {
-			Log().Error(err)
+			log.Printf("[zrpc] reg get local ip err: %s",err)
 			return nil
 		}
 		s.Ip = ip.String()

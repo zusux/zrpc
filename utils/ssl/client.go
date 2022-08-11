@@ -48,7 +48,7 @@ func (c *clientOneWayVerify) GetCred()(credentials.TransportCredentials){
 	}
 	return cert
 }
-func NewClientOneWayVerify(crtPath,serverName string) CaIface{
+func NewClientOneWayVerify(crtPath,serverName string) CaIface {
 	return &clientOneWayVerify{
 		CrtPath:crtPath,
 		ServerName:serverName,

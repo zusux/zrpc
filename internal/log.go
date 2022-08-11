@@ -24,11 +24,10 @@ type zlog struct {
 	loger  *logrus.Logger
 }
 
-func init()  {
-	loger = NewLog("log.default_log").loger
-}
-
 func Log() *logrus.Logger {
+	once.Do(func() {
+		loger = NewLog("log.default_log").loger
+	})
 	return loger
 }
 

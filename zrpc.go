@@ -1,6 +1,7 @@
 package zrpc
 
 import (
+	"github.com/knadh/koanf"
 	"github.com/sirupsen/logrus"
 	"github.com/zusux/zrpc/internal"
 	"gorm.io/gorm"
@@ -9,8 +10,8 @@ import (
 var once sync.Once
 var config *Config
 var NewError  = internal.NewError
-var Log = internal.Log
-var K = internal.K
+var Log func() *logrus.Logger
+var K *koanf.Koanf
 type Config struct {
 	Server *internal.Server
 	Reg    *internal.Reg
@@ -21,10 +22,13 @@ type Config struct {
 func Init()  {
 	once.Do(func() {
 		config = InitConfig()
+		K = internal.K
+		Log = internal.Log
 	})
 }
 
 func InitConfig() *Config {
+	internal.LoadEnv()
 	s, err := internal.GetServer()
 	if err != nil {
 		internal.Log().Error(err)
@@ -36,10 +40,10 @@ func InitConfig() *Config {
 		panic(err)
 	}
 	return &Config{
+		Log: internal.Log(),
 		Server: s,
 		Reg:    s.Reg(),
 		Db: db,
-		Log: internal.Log(),
 	}
 }
 
