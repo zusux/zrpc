@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,4 +32,31 @@ func GetWdDir() string {
 		panic(errors.New(fmt.Sprintf("pwd dir not find: %v", err)))
 	}
 	return fd
+}
+
+func AvailablePath(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+	if err == nil {
+		isDir := fileInfo.IsDir()
+		if isDir{
+			f,err :=ioutil.TempFile(path,"zrpc-*.tmp")
+			if err == nil{
+				f.Close()
+				err = os.Remove(f.Name())
+				return true,nil
+			}else{
+				return false,err
+			}
+		}
+		return false,errors.New(fmt.Sprintf("[zrpc][log] %s is not dir",path))
+	}
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(path,os.ModePerm)
+		if err != nil{
+			return false, err
+		}else{
+			return true, nil
+		}
+	}
+	return false, err
 }

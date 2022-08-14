@@ -35,18 +35,20 @@ func TestHub_AddEtcdServerAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			z.connect()
 			z.AddEtcdServerAddress([]string{"127.0.0.1:2379"})
 			wat := []string{"http://etcd-server:2379","127.0.0.1:2379"}
-			if !reflect.DeepEqual(z.Hosts, wat){
-				t.Errorf("NewHub error want: %+v, got: %+v",wat,z.Hosts)
+			if !reflect.DeepEqual(z.Etcd.Hosts, wat){
+				t.Errorf("NewHub error want: %+v, got: %+v",wat,z.Etcd.Hosts)
 			}
-			got,err := NewHub(z.Hosts,tt.fields.DialTimeout,tt.fields.DialKeepAlive)
+			got,err := NewHub(z.Etcd)
 			got.client = z.client
 			if err != nil ||  !reflect.DeepEqual(z, got) {
 				t.Errorf("NewHub error want: %+v, got: %+v, err:%v",z,got,err)
@@ -88,9 +90,11 @@ func TestHub_GetAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			got, err := z.GetAll(tt.args.key)
@@ -122,9 +126,11 @@ func TestHub_GetClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if got := z.GetClient(); !reflect.DeepEqual(got, tt.want) {
@@ -157,9 +163,11 @@ func TestHub_GetOne(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			got, err := z.GetOne(tt.args.key, tt.args.balance)
@@ -195,9 +203,11 @@ func TestHub_SetDialKeepAlive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if got := z.SetDialKeepAlive(tt.args.dialKeepAlive); !reflect.DeepEqual(got, tt.want) {
@@ -228,9 +238,11 @@ func TestHub_SetDialTimeout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if got := z.SetDialTimeout(tt.args.dialTimeout); !reflect.DeepEqual(got, tt.want) {
@@ -269,14 +281,16 @@ func TestHub_SetEtcdServerAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			z.SetEtcdServerAddress([]string{"127.0.0.1:2379"})
-			if !reflect.DeepEqual(z.Hosts,[]string{"127.0.0.1:2379"}){
-				t.Errorf("want=%v, got=%v",[]string{"127.0.0.1:2379"},z.Hosts)
+			if !reflect.DeepEqual(z.Etcd.Hosts,[]string{"127.0.0.1:2379"}){
+				t.Errorf("want=%v, got=%v",[]string{"127.0.0.1:2379"},z.Etcd.Hosts)
 			}
 		})
 	}
@@ -299,9 +313,11 @@ func TestHub_connect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if err := z.connect(); (err != nil) != tt.wantErr {
@@ -329,9 +345,11 @@ func TestHub_grant(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			got, err := z.grant()
@@ -368,9 +386,11 @@ func TestHub_keepAlive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			got, err := z.keepAlive(tt.args.id)
@@ -421,9 +441,11 @@ func TestHub_put(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if err := z.put(tt.args.key, tt.args.value, tt.args.id); (err != nil) != tt.wantErr {
@@ -464,9 +486,11 @@ func TestHub_revoke(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			if err := z.revoke(tt.args.id); (err != nil) != tt.wantErr {
@@ -509,9 +533,11 @@ func TestHub_timeToLive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			got, err := z.timeToLive(tt.args.id)
@@ -555,9 +581,11 @@ func TestHub_watch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Hub{
-				Hosts:         tt.fields.Hosts,
-				DialTimeout:   tt.fields.DialTimeout,
-				DialKeepAlive: tt.fields.DialKeepAlive,
+				Etcd: &Etcd{
+					Hosts:         tt.fields.Hosts,
+					DialTimeout:   tt.fields.DialTimeout,
+					DialKeepalive: tt.fields.DialKeepAlive,
+				},
 				client:        tt.fields.client,
 			}
 			z.watch("prod/book:grpc")
@@ -572,7 +600,12 @@ func TestNewHub(t *testing.T) {
 		dialTimeout   int64
 		dialKeepAlive int64
 	}
-	hub,_ := NewHub([]string{"127.0.0.1:2379"},1,1)
+	etcd := &Etcd{
+		Hosts:         []string{"127.0.0.1:2379"},
+		DialTimeout:   1,
+		DialKeepalive: 1,
+	}
+	hub,_ := NewHub(etcd)
 	tests := []struct {
 		name    string
 		args    args
@@ -592,7 +625,10 @@ func TestNewHub(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewHub(tt.args.hosts, tt.args.dialTimeout, tt.args.dialKeepAlive)
+			etcd := &Etcd{
+				tt.args.hosts, tt.args.dialTimeout, tt.args.dialKeepAlive,
+			}
+			got, err := NewHub(etcd)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewHub() error = %v, wantErr %v", err, tt.wantErr)
 				return

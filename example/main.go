@@ -12,16 +12,49 @@ import (
 )
 
 func main()  {
-	grpcReq()
+	etcdRetry()
 }
 
 func etcd()  {
-	conf := zrpc.GetConfig()
+	conf := zrpc.GetConf()
 	zrpc.Log().Info(fmt.Sprintf("%+v",conf))
-	conf.Reg.Register()
-	defer conf.Reg.UnRegister()
+	conf.Register()
+	defer conf.UnRegister()
 	for i:=0;i<10;i++{
 		time.Sleep(time.Second)
+		fmt.Println(i)
+	}
+	fmt.Println("close")
+}
+
+func etcdRetry()  {
+	conf := zrpc.GetConf()
+	zrpc.Log().Info(fmt.Sprintf("%+v",conf))
+	conf.Register()
+	defer conf.UnRegister()
+	i:=0
+	for {
+		i++
+		if i==5{
+			for k,v := range conf.EtcdDis.MapRegister{
+				zrpc.Log().Infof("register Key %s, value: %v:%v",k, v.Value.Ip,v.Value.Port)
+				v,err := v.GetInfo()
+				zrpc.Log().Infof("info value: %+v, err:%v",v, err)
+			}
+		}
+
+		if i==10{
+			for k,v := range conf.EtcdDis.MapRegister{
+				zrpc.Log().Infof("register Key %s, value: %v:%v",k, v.Value.Ip,v.Value.Port)
+				//v.UpdateService(1,2)
+				v,err := v.GetInfo()
+				zrpc.Log().Infof("info value: %+v, err:%v",v, err)
+			}
+			i = 0
+		}
+		time.Sleep(time.Second)
+		fmt.Println(i)
+
 	}
 	fmt.Println("close")
 }
@@ -47,14 +80,14 @@ func log() {
 
 //etcd grpc
 func grpcReq() {
-	zrpc.GetEtcd().Register()
+	zrpc.GetConf().Register()
 	doReq()
-	zrpc.GetEtcd().UnRegister()
+	zrpc.GetConf().UnRegister()
 }
 
 func doReq() {
 	var req interface{}
-	zrpc.GetEtcd().GrpcRequestRemote(context.Background(), "github.com/zusux/go-doc/ibook-service",req, reqFactory)
+	zrpc.GetConf().GrpcRequestRemote(context.Background(), "ibook-service",req, reqFactory)
 }
 
 //通过传入的 实例地址  创建对应的请求endPoint

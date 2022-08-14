@@ -1,8 +1,9 @@
 package zetcd
 
 import (
-	"fmt"
+	"context"
 	"github.com/sirupsen/logrus"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
 )
 
@@ -18,6 +19,7 @@ const StatusGrantError STATUS = 501
 const StatusPutError STATUS = 502
 const StatusKeepaliveError STATUS = 503
 const StatusRevokeError STATUS = 504
+const StatusEtcdRemoteCloseError STATUS = 505
 
 type EtcdService struct {
 	Key  *KeyInfo
@@ -30,9 +32,9 @@ type EtcdService struct {
 	logger  *logrus.Logger
 }
 
-func NewEtcdService(hosts []string, keyinfo *KeyInfo, valueInfo *ValueInfo, dialTimeout, dialKeepAlive int64, retry bool, log *logrus.Logger) (*EtcdService, error) {
+func NewEtcdService(etcd *Etcd, keyinfo *KeyInfo, valueInfo *ValueInfo, retry bool, log *logrus.Logger) (*EtcdService, error) {
 
-	hub,err := NewHub(hosts,dialTimeout,dialKeepAlive)
+	hub,err := NewHub(etcd)
 	service := EtcdService{
 		Key:   keyinfo,
 		Value:   valueInfo,
@@ -53,7 +55,7 @@ func (s *EtcdService) Start() error {
 	ch, err := s.KeepLive()
 	if err != nil {
 		s.status = StatusKeepaliveError
-		s.logger.WithField("init", "start").Error(fmt.Sprintf("[zetcd] client keeplive fail err:%s , code: %d \n", err, s.status))
+		s.logger.WithField("init", "start").Errorf("[zetcd] client keeplive fail err:%s , code: %d \n", err, s.status)
 		return err
 	}
 	go func() {
@@ -64,18 +66,19 @@ func (s *EtcdService) Start() error {
 				s.Revoke()
 				return
 			case <-s.hub.client.Ctx().Done():
-				s.logger.WithField("keepalive", "client.Done").Info(fmt.Sprintf("[zetcd] server closed  \n"))
+				s.logger.WithField("keepalive", "client.Done").Infof("[zetcd] server closed  \n")
 				s.analyseRetry()
 				return
 			case res, ok := <-ch:
 				if !ok {
-					s.logger.WithField("keepalive", "close").Info(fmt.Sprintf("[zetcd] keep live channel info res:%v ok:%v \n", res, ok))
-					s.logger.WithField("keepalive", "close").Info(fmt.Sprintf("[zetcd] keep live channel closed code:%d \n", s.status))
+					s.logger.WithField("keepalive", "close").Infof("[zetcd] keep live channel info res:%v ok:%v \n", res, ok)
+					s.logger.WithField("keepalive", "close").Infof("[zetcd] keep live channel closed code:%d \n", s.status)
+					s.status = StatusEtcdRemoteCloseError
 					s.Revoke()
 					s.analyseRetry()
 					return
 				} else {
-					s.logger.WithField("keepalive", "online").Info(fmt.Sprintf("[zetcd] recv reply from service:%s, ttl:%d\n", s.Key.GetRegisterKey(), res.TTL))
+					s.logger.WithField("keepalive", "online").Infof("[zetcd] recv reply from service:%s, ttl:%d\n", s.Key.GetRegisterKey(), res.TTL)
 				}
 			}
 		}
@@ -86,10 +89,10 @@ func (s *EtcdService) Start() error {
 
 func (s *EtcdService) analyseRetry() {
 	if s.Retry && s.status >= 500 {
-		s.logger.WithField("keepalive", "analyseRetry").Info(fmt.Sprintf("[zetcd] start to restart code: %d \n", s.status))
+		s.logger.WithField("keepalive", "analyseRetry").Infof("[zetcd] start to restart code: %d \n", s.status)
 		s.ReStart()
 	}else{
-		s.logger.WithField("keepalive", "analyseRetry").Info(fmt.Sprintf("[zetcd]  restart do nothing code: %d \n", s.status))
+		s.logger.WithField("keepalive", "analyseRetry").Infof("[zetcd]  restart do nothing code: %d \n", s.status)
 	}
 }
 
@@ -99,14 +102,10 @@ func (s *EtcdService) ReStart() error {
 	err := s.hub.connect()
 	if err != nil {
 		s.status = StatusConnectError
-		s.logger.Error(fmt.Sprintf("[zetcd] client reconnect fail err:%s , code: %d \n", err, s.status))
+		s.logger.Errorf("[zetcd] client reconnect fail err:%s , code: %d \n", err, s.status)
 		return err
 	}
-	err = s.Revoke()
-	if err != nil {
-		s.status = StatusRevokeError
-		s.logger.Error(fmt.Sprintf("[zetcd] client Revoke fail err:%s , code: %d \n", err, s.status))
-	}
+	s.Revoke()
 	s.Start()
 	return nil
 }
@@ -119,25 +118,34 @@ func (s *EtcdService) UpdateService(status STATUS, requestFlow uint32) error{
 	err = s.hub.put(s.Key.GetRegisterKey(),string(valueByte) , s.leaseId)
 	if err != nil {
 		s.status = StatusPutError
-		s.logger.Error(fmt.Sprintf("[zetcd] client update service fail err:%s , value: %v \n", err, s.Value))
+		s.logger.Errorf("[zetcd] client update service fail err:%s , value: %v \n", err, s.Value)
 		return err
 	}
 	return nil
 }
+func (s *EtcdService) GetInfo() ([]*mvccpb.KeyValue,error){
+	//查看之前存在的节点
+	resp, err := s.hub.GetClient().Get(context.Background(), s.Key.GetRegisterKey(), clientv3.WithPrefix())
+	if err != nil {
+		s.logger.Errorf("[zetcd][WatchNodes] get Node error! prefixPath:%s error:%s\n", s.Key.GetRegisterKey(), err.Error())
+	}
+	return resp.Kvs,err
+}
+
 
 //KeepLive 用于维持租约
 func (s *EtcdService) KeepLive() (<-chan *clientv3.LeaseKeepAliveResponse, error) {
 	resp, err := s.hub.grant()
 	if err != nil {
 		s.status = StatusGrantError
-		s.logger.Error(fmt.Sprintf("[zetcd] client grant fail err:%s , code: %d \n", err, s.status))
+		s.logger.Errorf("[zetcd] client grant fail err:%s , code: %d \n", err, s.status)
 		return nil, err
 	}
 	valueByte,err := s.Value.EncodeValue()
 	err = s.hub.put(s.Key.GetRegisterKey(),string(valueByte) , resp.ID)
 	if err != nil {
 		s.status = StatusPutError
-		s.logger.Error(fmt.Sprintf("[zetcd] client put fail err:%s , code: %d \n", err, s.status))
+		s.logger.Errorf("[zetcd] client put %s fail err:%s , code: %d \n",s.Key.GetRegisterKey(), err, s.status)
 		return nil, err
 	}
 	s.leaseId = resp.ID
@@ -152,12 +160,13 @@ func (s *EtcdService) Stop() {
 }
 
 //revoke 撤销一个租约
-func (s *EtcdService) Revoke() error {
-	err := s.hub.revoke(s.leaseId)
-	if err != nil {
-		s.status = StatusRevokeError
-		s.logger.Error(fmt.Sprintf("[zetcd] client Revoke fail err:%s , code: %d\n", err, s.status))
-	}
-	s.logger.Info(fmt.Sprintf("[zetcd] service: %s stop\n", s.Key.GetRegisterKey()))
-	return err
+func (s *EtcdService) Revoke(){
+	go func() {
+		err := s.hub.revoke(s.leaseId)
+		if err != nil {
+			s.status = StatusRevokeError
+			s.logger.Errorf("[zetcd] client Revoke fail err:%s , code: %d\n", err, s.status)
+		}
+		s.logger.Infof("[zetcd] service: %s stop\n", s.Key.GetRegisterKey())
+	}()
 }

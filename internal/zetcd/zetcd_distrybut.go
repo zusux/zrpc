@@ -1,68 +1,73 @@
 package zetcd
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 )
 
+type Etcd struct {
+	Hosts         []string
+	DialTimeout   int64
+	DialKeepalive int64
+}
+
 type EtcdDis struct {
 	Cluster string
-	Hosts   []string //etcd服务集群机器
+	Etcd   *Etcd //etcd服务集群机器
 	//注册; key:服务名称
-	MapRegister map[string]*EtcdService
+	MapRegister map[string]*EtcdService  //["Cluster/server.name:Kind"]*EtcdService
 	//监听相关的服务
-	MapWatch map[string]*EtcdMaster
-	logger   *logrus.Logger
+	MapWatch map[string]*EtcdMaster //[service_name]*EtcdService
+	Logger   *logrus.Logger
 }
 
 // NewEtcdDis 注册相关的函数
-func NewEtcdDis(cluster string, hosts []string, logger *logrus.Logger) *EtcdDis {
+func NewEtcdDis(cluster string, etcd *Etcd, logger *logrus.Logger) *EtcdDis {
 	return &EtcdDis{
 		Cluster:     cluster,
-		Hosts:       hosts,
+		Etcd:       etcd,
 		MapRegister: nil,
 		MapWatch:    nil,
-		logger:      logger,
+		Logger:      logger,
 	}
 }
 
-func (d *EtcdDis) Register(keyInfo *KeyInfo, valueInfo *ValueInfo, dialTimeout, dialKeepAlive int64, retry bool) {
+func (d *EtcdDis) Register(keyInfo *KeyInfo, valueInfo *ValueInfo, retry bool) {
 
 	var s *EtcdService
 	var e error
-	if s, e = NewEtcdService(d.Hosts, keyInfo, valueInfo, dialTimeout, dialKeepAlive, retry, d.logger); e != nil {
-		fmt.Printf("[zetcd] Register service:%s error:%s \n", s.Key.GetRegisterKey(), e.Error())
+	if s, e = NewEtcdService(d.Etcd, keyInfo, valueInfo, retry, d.Logger); e != nil {
+		d.Logger.Warnf("[zetcd][Register] service:%s error:%s \n", s.Key.GetRegisterKey(), e.Error())
 		return
 	}
 	if d.MapRegister == nil {
 		d.MapRegister = make(map[string]*EtcdService)
 	}
 	if _, ok := d.MapRegister[s.Key.GetRegisterKey()]; ok {
-		fmt.Printf("Service:%s Have Registered", s.Key.GetRegisterKey())
+		d.Logger.Warnf("[zetcd][Register] Service:%s Have Registered", s.Key.GetRegisterKey())
 		return
 	}
 	d.MapRegister[s.Key.GetRegisterKey()] = s
 	//维持心跳
 	s.Start()
-	d.Watch(s.Key.GetRegisterKey())
 }
 
 //监听相关的
 func (d *EtcdDis) Watch(service string) {
 	var w *EtcdMaster
 	var e error
-	if w, e = NewMaster(d.Hosts, service); e != nil {
-		fmt.Printf("Watch Service:%s Failed! Error:%s\n", service, e.Error())
-		return
-	}
 	if d.MapWatch == nil {
 		d.MapWatch = make(map[string]*EtcdMaster)
 	}
-
 	if _, ok := d.MapWatch[service]; ok {
-		fmt.Printf("Service:%s Have Watch!\n", service)
+		d.Logger.Warnf("[zetcd][Watch] Service:%s Have Watch!\n", service)
 		return
 	}
+
+	if w, e = NewMaster(d.Cluster,service,d.Etcd, d.Logger); e != nil {
+		d.Logger.Warnf("[zetcd][Watch] Service:%s Failed! Error:%s\n", service, e.Error())
+		return
+	}
+	go w.DoWatch()
 	d.MapWatch[service] = w
 }
 
@@ -73,28 +78,28 @@ func (d *EtcdDis) IsWatched(service string) bool {
 	return false
 }
 
-//GetServiceInfoRandom 获取服务节点信息-随机获取
-func (d *EtcdDis) GetServiceInfoRandom(service string) (EtcdNode, bool) {
+//GetGrpcServiceInfoRandom 获取服务grpc节点信息-随机获取
+func (d *EtcdDis) GetGrpcServiceInfoRandom(service string) (*ValueInfo, bool) {
 	if d.MapWatch == nil {
-		fmt.Println("MapWatch is nil")
-		return EtcdNode{}, false
+		d.Logger.Warnf("[zetcd][GetServiceInfoRandom] MapWatch is nil")
+		return nil, false
 	}
 	if v, ok := d.MapWatch[service]; ok {
 		if v != nil {
-			if n, ok1 := v.GetNodeRandom(); ok1 {
+			if n, ok1 := v.GetGrpcNodeRandom(); ok1 {
 				return n, true
 			}
 		}
 	} else {
-		fmt.Printf("Service:%s Not Be Watched!\n", service)
+		d.Logger.Warnf("[zetcd][GetServiceInfoRandom] Service:%s Not Be Watched!\n", service)
 	}
-	return EtcdNode{}, false
+	return nil, false
 }
 
 //GetServiceInfoAllNode 获取服务的节点信息
 func (d *EtcdDis) GetServiceInfoAllNode(service string) ([]EtcdNode, bool) {
 	if d.MapWatch == nil {
-		fmt.Println("MapWatch is nil")
+		d.Logger.Warnf("[zetcd][GetServiceInfoAllNode] MapWatch is nil")
 		return []EtcdNode{}, false
 	}
 	if v, ok := d.MapWatch[service]; ok {
@@ -102,7 +107,7 @@ func (d *EtcdDis) GetServiceInfoAllNode(service string) ([]EtcdNode, bool) {
 			return v.GetAllNodes(), true
 		}
 	} else {
-		fmt.Printf("Service:%s Not Be Watched!\n", service)
+		d.Logger.Warnf("[zetcd][GetServiceInfoAllNode] Service:%s Not Be Watched!\n", service)
 	}
 	return []EtcdNode{}, false
 }

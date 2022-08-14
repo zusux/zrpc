@@ -81,6 +81,11 @@ func (i *KeyInfo) setCluster(cluster string) {
 func (i *KeyInfo) setName(name string) {
 	i.Name = name
 }
+// GetName 获取名称
+func (i *KeyInfo) GetName() string {
+	return i.Name
+}
+
 // setKind 设置类型
 func (i *KeyInfo) setKind(kind string) {
 	i.Kind = kind
@@ -131,7 +136,6 @@ func (i *ValueInfo) EncodeValue() ([]byte,error) {
 	if err != nil {
 		return nil,errors.New(fmt.Sprintf("[zetcd] decode value error:%s\n",err.Error()))
 	}
-	fmt.Println(valueByte)
 	return valueByte,nil
 }
 // DecodeValue 解码 proto消息
@@ -148,8 +152,6 @@ func (i *ValueInfo) DecodeValue(infoByte []byte) error  {
 	i.RequestFlow = *newValue.RequestFlow
 	i.Status = STATUS(*newValue.Status)
 	i.UpdatedAt = int64(*newValue.UpdatedAt)
-	fmt.Printf("%+v\n", newValue)
-	fmt.Println(newValue)
 	return nil
 }
 

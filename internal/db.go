@@ -21,35 +21,11 @@ type Mysql struct {
 	Database string
 	Prefix   string
 	Debug    bool
-	logger   *logrus.Logger
-	zdb  *gorm.DB
+	Logger   *logrus.Logger
+	Db  *gorm.DB
+	SectionLog string
 }
 
-// GetDbBySec 指定DB
-func GetDbBySec(section string) (*gorm.DB, error) {
-	return GetMysql(section).GetDb()
-}
-
-func GetMysql(section string) *Mysql {
-	host := fmt.Sprintf("%s.host", section)
-	port := fmt.Sprintf("%s.port", section)
-	username := fmt.Sprintf("%s.username", section)
-	passwd := fmt.Sprintf("%s.password", section)
-	database := fmt.Sprintf("%s.database", section)
-	debug := fmt.Sprintf("%s.debug", section)
-	prefix := fmt.Sprintf("%s.prefix", section)
-	var mysql = NewMysql(
-		K.String(host),
-		K.Int(port),
-		K.String(username),
-		K.String(passwd),
-		K.String(database),
-		K.String(prefix),
-		K.Bool(debug),
-		Log(),
-	)
-	return mysql
-}
 func NewMysql(
 	host string,
 	port int,
@@ -59,6 +35,7 @@ func NewMysql(
 	prefix string,
 	debug bool,
 	log *logrus.Logger,
+	sectionLog string,
 ) *Mysql {
 	return &Mysql{
 		Host:     host,
@@ -68,13 +45,14 @@ func NewMysql(
 		Database: database,
 		Prefix: prefix,
 		Debug:    debug,
-		logger: log,
+		Logger: log,
+		SectionLog: sectionLog,
 	}
 }
 
 func (m *Mysql) NewConnection() (*gorm.DB, error) {
 	newLogger := logger.New(
-		log.New(m.logger.Writer(), "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
+		log.New(m.Logger.Writer(), "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
 		logger.Config{
 			SlowThreshold: time.Second,   // 慢 SQL 阈值
 			LogLevel:      logger.Info, // 日志级别
@@ -106,6 +84,10 @@ func (m *Mysql) NewConnection() (*gorm.DB, error) {
 	return db, nil
 }
 
+func (m *Mysql) SetLogger(logger *logrus.Logger) {
+	m.Logger = logger
+}
+
 func (m *Mysql) GetLevel()  logger.LogLevel {
 	if m.Debug{
 		return logger.Info
@@ -122,39 +104,40 @@ func (m *Mysql) GetDns() string {
 		m.Database,
 	)
 	if m.Debug{
-		m.logger.Info(dns)
+		m.Logger.Info(dns)
 	}
 	return dns
 }
 
-//获取数据库
+//GetDb 获取数据库
 func (m *Mysql) GetDb() (*gorm.DB,error) {
 	//m.NewConnection()
-	if m.zdb == nil{
+	if m.Db == nil{
 		db,err := m.NewConnection()
-		m.zdb = db
+		m.Db = db
 		if err != nil{
 			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
-			m.logger.Warn(zrr.String())
+			m.Logger.Errorf("[zrpc][db] connect error:%s",zrr.String())
 			return db,zrr
 		}
 	}
-	mdb,err := m.zdb.DB()
+	mdb,err := m.Db.DB()
 	if  err != nil || mdb.Ping() != nil {
 		db,err := m.NewConnection()
 		if err != nil{
 			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
-			m.logger.Error(zrr.String())
-			m.zdb = db
+			m.Logger.Errorf("[zrpc][db] connect error:%s",zrr.String())
+			m.Db = db
 		}
 	}
-	return m.zdb,nil
+	return m.Db,nil
 }
 
-//关闭数据库
+// Close 关闭数据库
 func (m *Mysql) Close() error {
-	mdb,err := m.zdb.DB()
+	mdb,err := m.Db.DB()
 	if err != nil{
+		m.Logger.Errorf("[zrpc][Db] close error:%s",err.Error())
 		return err
 	}
 	return mdb.Close()

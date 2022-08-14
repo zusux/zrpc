@@ -3,9 +3,9 @@
 ```
 
 #### 初始化
-[配置文件](example/config/dev.yaml)
+[配置文件](example/config/prod.yaml)
 ```go
-// 配置文件存放路径 默认在 执行目录/config/dev.yaml
+// 配置文件存放路径 默认在 执行目录/config/prod.yaml
 //设置配置文件路径
 //初始化
 zrpc.Init()
@@ -13,7 +13,7 @@ zrpc.Init()
 
 #### log 获取
 ```go
-log := zrpc.GetLog()
+log := zrpc.Log()
 ```
 
 
@@ -30,8 +30,8 @@ name := zrpc.K.String("server.name")
 
 ####grpc 服务注册
 ```go
-   etcd := zrpc.GetEtcd()
-   etcd.Register()
-   etcd.GrpcRequestRemote(ctx context.Context,serverName string, req interface{}, reqFactory sd.Factory) 
-   etcd.UnRegister()
+    conf := zrpc.GetConf()
+    conf.Register()
+    conf.GrpcRequestRemote(ctx context.Context,serverName string, req interface{}, reqFactory sd.Factory)
+    conf.UnRegister()
 ```

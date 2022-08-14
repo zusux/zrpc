@@ -1,0 +1,59 @@
+server:
+  name: "book"
+  ip:
+  retry: true
+  etcd:
+    hosts: ["127.0.0.1:2379"]
+    dialTimeout: 3
+    dialKeepAlive: 60
+  #注册服务
+  listen:
+    grpc:
+        port: 5040
+        publish: true
+    http:
+        port: 5050
+        publish: true
+    debug:
+        port: 5060
+        publish: false
+  #依赖服务
+  service:
+    user: "user-srv" ## other server.name
+    book: "book-service"
+    cat: "cat-service"
+    chapter: "chapter-service"
+    content: "content-service"
+
+  ######## 日志
+  loger:
+    default_log:
+      path: logs
+      file: log
+      age: 24  #hour 文件最大保存时间
+      rotation: 24  #hour  日志切割时间间隔
+    mysql_log:
+      path: logs
+      file: mysql
+      age: 24  #hour 文件最大保存时间
+      rotation: 24  #hour  日志切割时间间隔
+
+  ######## mysql
+  mysql:
+    default_mysql:
+      host: 127.0.0.1
+      port: 3306
+      username: root
+      password: 123456
+      database: micro_book
+      prefix:
+      debug: false
+      sectionLog: "mysql_log"
+
+  ######## redis
+  redis:
+    default_redis:
+      host: 127.0.0.1
+      port: 6379
+      auth:
+
