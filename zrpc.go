@@ -9,9 +9,6 @@ import (
 	"sync"
 )
 
-func init()  {
-	Init()
-}
 var once sync.Once
 var K *koanf.Koanf
 var server  *internal.Server

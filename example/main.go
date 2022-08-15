@@ -8,11 +8,13 @@ import (
 	"github.com/zusux/zrpc/example/access"
 	"google.golang.org/grpc"
 	"io"
+	"os"
 	"time"
 )
 
 func main()  {
-	etcdRetry()
+	fmt.Println(os.Getenv("site_mode"))
+	//etcdRetry()
 }
 
 func etcd()  {
