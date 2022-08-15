@@ -81,9 +81,7 @@ func (z *Hub) GetAll(key string) (*[]string, error) {
 }
 
 func (z *Hub) grant() (*clientv3.LeaseGrantResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
-	defer cancel()
-	return z.client.Grant(ctx, z.Etcd.getDialKeepalive())
+	return z.client.Grant(context.Background(), z.Etcd.getDialKeepalive())
 }
 
 func (z *Hub) revoke(id clientv3.LeaseID) error {
@@ -99,9 +97,7 @@ func (z *Hub) timeToLive(id clientv3.LeaseID) (*clientv3.LeaseTimeToLiveResponse
 }
 
 func (z *Hub) keepAlive(id clientv3.LeaseID) (<-chan *clientv3.LeaseKeepAliveResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
-	defer cancel()
-	return z.client.KeepAlive(ctx, id)
+	return z.client.KeepAlive(context.Background(), id)
 }
 
 func (z *Hub) watch(key string) {

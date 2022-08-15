@@ -43,7 +43,7 @@ func (d *EtcdDis) Register(keyInfo *KeyInfo, valueInfo *ValueInfo, retry bool) {
 	}
 	d.MapRegister[s.Key.GetRegisterKey()] = s
 	//维持心跳
-	s.Start()
+	go s.Start()
 }
 
 //监听相关的
