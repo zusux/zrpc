@@ -9,6 +9,7 @@ import (
 	"go.etcd.io/etcd/client/v3"
 	"math/rand"
 	"sync"
+	"time"
 )
 
 type EtcdMaster struct {
@@ -113,8 +114,10 @@ func (m *EtcdMaster) DoWatch() {
 }
 
 func (m *EtcdMaster) Get() {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(m.Etcd.getDialTimeout()))
+	defer cancel()
 	//查看之前存在的节点
-	resp, err := m.hub.GetClient().Get(context.Background(), m.GetPrefixPath(), clientv3.WithPrefix())
+	resp, err := m.hub.GetClient().Get(ctx, m.GetPrefixPath(), clientv3.WithPrefix())
 	if err != nil {
 		m.Loger.Errorf("[zetcd][WatchNodes] get Node error! prefixPath:%s error:%s\n", m.GetPrefixPath(), err.Error())
 	} else {

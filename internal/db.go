@@ -23,6 +23,9 @@ type Mysql struct {
 	Debug    bool
 	Logger   *logrus.Logger
 	Db  *gorm.DB
+	MaxIdleConns int //最大空闲连接数
+	MaxOpenConns int //最大连接数
+	ConnMaxLifetime int //分钟
 	SectionLog string
 }
 
@@ -76,11 +79,11 @@ func (m *Mysql) NewConnection() (*gorm.DB, error) {
 		return db, err
 	}
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
-	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxIdleConns(m.getMaxIdleConns())
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxOpenConns(m.getMaxOpenConns())
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetConnMaxLifetime(time.Duration(m.getConnMaxLifetime()) * time.Minute)
 	return db, nil
 }
 
@@ -141,4 +144,25 @@ func (m *Mysql) Close() error {
 		return err
 	}
 	return mdb.Close()
+}
+
+func (m *Mysql) getMaxIdleConns() int {
+	if m.MaxIdleConns == 0{
+		m.MaxIdleConns = 1
+	}
+	return m.MaxIdleConns
+}
+
+func (m *Mysql) getMaxOpenConns() int {
+	if m.MaxOpenConns == 0{
+		m.MaxOpenConns = 2
+	}
+	return m.MaxOpenConns
+}
+
+func (m *Mysql) getConnMaxLifetime() int {
+	if m.ConnMaxLifetime == 0{
+		m.ConnMaxLifetime = 60
+	}
+	return m.ConnMaxLifetime
 }

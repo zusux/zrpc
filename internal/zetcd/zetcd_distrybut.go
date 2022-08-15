@@ -4,11 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Etcd struct {
-	Hosts         []string
-	DialTimeout   int64
-	DialKeepalive int64
-}
+
 
 type EtcdDis struct {
 	Cluster string
@@ -32,7 +28,6 @@ func NewEtcdDis(cluster string, etcd *Etcd, logger *logrus.Logger) *EtcdDis {
 }
 
 func (d *EtcdDis) Register(keyInfo *KeyInfo, valueInfo *ValueInfo, retry bool) {
-
 	var s *EtcdService
 	var e error
 	if s, e = NewEtcdService(d.Etcd, keyInfo, valueInfo, retry, d.Logger); e != nil {

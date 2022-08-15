@@ -3,7 +3,7 @@ package zetcd
 import (
 	"context"
 	"fmt"
-	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3"
 	"time"
 )
 
@@ -38,22 +38,24 @@ func (z *Hub) GetClient() *clientv3.Client {
 func (z *Hub) connect() error {
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints:   z.Etcd.Hosts,
-		DialTimeout: time.Millisecond * time.Duration(z.Etcd.DialTimeout),
+		DialTimeout: time.Millisecond * time.Duration(z.Etcd.getDialTimeout()),
 	})
 	z.client = client
 	return err
 }
 
 func (z *Hub) put(key, value string, id clientv3.LeaseID) error {
-	_, err := z.client.Put(context.TODO(), key, value, clientv3.WithLease(id))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
+	defer cancel()
+	_, err := z.client.Put(ctx, key, value, clientv3.WithLease(id))
 	return err
 }
 
 
 func (z *Hub) GetOne(key string, balance Balancer) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(z.Etcd.DialTimeout))
-	resp, err := z.client.Get(ctx, key)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
 	defer cancel()
+	resp, err := z.client.Get(ctx, key)
 	if err != nil {
 		return "", err
 	}
@@ -65,7 +67,7 @@ func (z *Hub) GetOne(key string, balance Balancer) (string, error) {
 }
 
 func (z *Hub) GetAll(key string) (*[]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(z.Etcd.DialTimeout))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
 	resp, err := z.client.Get(ctx, key)
 	defer cancel()
 	if err != nil {
@@ -79,11 +81,15 @@ func (z *Hub) GetAll(key string) (*[]string, error) {
 }
 
 func (z *Hub) grant() (*clientv3.LeaseGrantResponse, error) {
-	return z.client.Grant(context.TODO(), z.Etcd.DialKeepalive)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
+	defer cancel()
+	return z.client.Grant(ctx, z.Etcd.getDialKeepalive())
 }
 
 func (z *Hub) revoke(id clientv3.LeaseID) error {
-	_, err := z.client.Revoke(context.TODO(), id)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
+	defer cancel()
+	_, err := z.client.Revoke(ctx, id)
 	return err
 }
 
@@ -93,26 +99,19 @@ func (z *Hub) timeToLive(id clientv3.LeaseID) (*clientv3.LeaseTimeToLiveResponse
 }
 
 func (z *Hub) keepAlive(id clientv3.LeaseID) (<-chan *clientv3.LeaseKeepAliveResponse, error) {
-	return z.client.KeepAlive(context.TODO(), id)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
+	defer cancel()
+	return z.client.KeepAlive(ctx, id)
 }
 
 func (z *Hub) watch(key string) {
-	rch := z.client.Watch(context.Background(), key)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * time.Duration(z.Etcd.getDialTimeout()))
+	defer cancel()
+	rch := z.client.Watch(ctx, key)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			fmt.Printf("Type: %s Key:%s Value:%s\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
 		}
 	}
-}
-
-//SetDialTimeout 设置超时时间
-func (z *Hub) SetDialTimeout(dialTimeout int64) *Hub {
-	z.Etcd.DialTimeout = dialTimeout
-	return z
-}
-//SetDialKeepAlive 设置keepalive时间
-func (z *Hub) SetDialKeepAlive(dialKeepAlive int64) *Hub {
-	z.Etcd.DialKeepalive = dialKeepAlive
-	return z
 }
 

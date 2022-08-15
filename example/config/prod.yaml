@@ -4,8 +4,8 @@ server:
   retry: true
   etcd:
     hosts: ["127.0.0.1:2379"]
-    dialTimeout: 3
-    dialKeepAlive: 60
+    dialTimeout: 500 #毫秒  默认500毫秒
+    dialKeepAlive: 10 #秒  默认10秒
   #注册服务
   listen:
     grpc:
@@ -48,6 +48,9 @@ server:
       database: micro_book
       prefix:
       debug: false
+      maxIdleConns: 1 #最大空闲连接数
+      maxOpenConns: 2 #最大连接数
+      connMaxLifetime: 60 #分钟
       sectionLog: "mysql_log"
 
   ######## redis

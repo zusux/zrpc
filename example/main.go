@@ -8,13 +8,13 @@ import (
 	"github.com/zusux/zrpc/example/access"
 	"google.golang.org/grpc"
 	"io"
-	"os"
 	"time"
 )
 
 func main()  {
-	fmt.Println(os.Getenv("site_mode"))
-	//etcdRetry()
+	zrpc.Init()
+	//fmt.Println(os.Getenv("site_mode"))
+	etcdRetry()
 }
 
 func etcd()  {
@@ -39,7 +39,7 @@ func etcdRetry()  {
 		i++
 		if i==5{
 			for k,v := range conf.EtcdDis.MapRegister{
-				zrpc.Log().Infof("register Key %s, value: %v:%v",k, v.Value.Ip,v.Value.Port)
+				zrpc.Log().Infof("Key %s, value: %v:%v",k, v.Value.Ip,v.Value.Port)
 				v,err := v.GetInfo()
 				zrpc.Log().Infof("info value: %+v, err:%v",v, err)
 			}

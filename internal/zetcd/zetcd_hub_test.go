@@ -210,7 +210,7 @@ func TestHub_SetDialKeepAlive(t *testing.T) {
 				},
 				client:        tt.fields.client,
 			}
-			if got := z.SetDialKeepAlive(tt.args.dialKeepAlive); !reflect.DeepEqual(got, tt.want) {
+			if got := z.Etcd.SetDialKeepAlive(tt.args.dialKeepAlive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SetDialKeepAlive() = %v, want %v", got, tt.want)
 			}
 		})
@@ -245,7 +245,7 @@ func TestHub_SetDialTimeout(t *testing.T) {
 				},
 				client:        tt.fields.client,
 			}
-			if got := z.SetDialTimeout(tt.args.dialTimeout); !reflect.DeepEqual(got, tt.want) {
+			if got := z.Etcd.SetDialTimeout(tt.args.dialTimeout); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SetDialTimeout() = %v, want %v", got, tt.want)
 			}
 		})
@@ -427,7 +427,7 @@ func TestHub_put(t *testing.T) {
 			name: "put",
 			fields: fields{
 				Hosts:         []string{"http://etcd-server:2379"},
-				DialTimeout:   1,
+				DialTimeout:   500,
 				DialKeepAlive: 1,
 				client:        nil,
 			},
@@ -475,7 +475,7 @@ func TestHub_revoke(t *testing.T) {
 			name: "revoke",
 			fields: fields{
 				Hosts:         []string{"http://etcd-server:2379"},
-				DialTimeout:   1,
+				DialTimeout:   500,
 				DialKeepAlive: 1,
 				client:        nil,
 			},
@@ -521,7 +521,7 @@ func TestHub_timeToLive(t *testing.T) {
 			name: "timeToLive",
 			fields: fields{
 				Hosts:         []string{"http://etcd-server:2379"},
-				DialTimeout:   1,
+				DialTimeout:   500,
 				DialKeepAlive: 1,
 				client:        nil,
 			},
@@ -571,7 +571,7 @@ func TestHub_watch(t *testing.T) {
 			name: "watch",
 			fields: fields{
 				Hosts:         []string{"http://etcd-server:2379"},
-				DialTimeout:   1,
+				DialTimeout:   500,
 				DialKeepAlive: 1,
 				client:        nil,
 			},
@@ -616,7 +616,7 @@ func TestNewHub(t *testing.T) {
 			name: "NewHub",
 			args: args{
 				hosts:         []string{"127.0.0.1:2379"},
-				dialTimeout:   1,
+				dialTimeout:   500,
 				dialKeepAlive: 1,
 			},
 			want: hub,
