@@ -156,6 +156,24 @@ func (s *Server) GrpcRequestRemote(ctx context.Context, serverName string, req i
 	return
 }
 
+// GetRandomEndPoint 获取随机的端点
+func (s *Server) GetRandomEndPoint(serviceName string) (endpoint string, err error) {
+	valueInfo, ok := s.EtcdDis.GetGrpcServiceInfoRandom(serviceName)
+	if ok {
+		addr, ok := valueInfo.GetValidAddress()
+		if ok {
+			return addr,nil
+		} else {
+			s.Log().Errorf("[zetcd][service] service endpoint address is not valid addr:%s, ok:%v", addr, ok)
+			err = errors.New(serviceName+ " service endpoint address is not valid")
+		}
+	} else {
+		s.Log().Errorf("[zetcd][service] %s have not endpoint",serviceName)
+		err = errors.New(serviceName+ " service no find endpoint")
+	}
+	return
+}
+
 // GetDb 指定DB
 func (s *Server)GetDb() (*gorm.DB, error) {
 	return s.GetDbBySec("default_mysql")
