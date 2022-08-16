@@ -94,17 +94,17 @@ func (m *EtcdMaster) GetPrefixPath() string {
 }
 
 func (m *EtcdMaster) DecodeKeyValue(ev *mvccpb.KeyValue) (*KeyInfo, *ValueInfo, error) {
-	m.Loger.Infof("[zetcd][DecodeKeyValue] decode key:%q,value:%q\n", ev.Key, ev.Value)
 	keyInfo, err1 := m.GetKeyInfo(ev.Key)
 	if err1 != nil {
-		m.Loger.Errorf("[zetcd][DecodeKeyValue] %v decode key error: %s", string(ev.Key), err1)
+		m.Loger.Errorf("[zetcd][DecodeKey] key:%s value:%v error: %s", string(ev.Key), string(ev.Value), err1.Error())
 		return nil, nil, err1
 	}
 	valueInfo, err2 := m.GetValueInfo(ev.Value)
 	if err2 != nil {
-		m.Loger.Errorf("[zetcd][DecodeKeyValue] %v decode value error: %s", string(ev.Value), err2)
+		m.Loger.Errorf("[zetcd][DecodeValue]key:%s value:%v error: %s", string(ev.Key), string(ev.Value), err2.Error())
 		return nil, nil, err2
 	}
+	m.Loger.Infof("[zetcd][DecodeKeyValue] decode key:%q, endpoint:%q\n", ev.Key, valueInfo.getRegisterAddress())
 	return keyInfo, valueInfo, nil
 }
 
@@ -172,7 +172,7 @@ func (m *EtcdMaster) Watch() {
 					}
 					m.addNode(keyInfo, valueInfo)
 				case clientv3.EventTypeDelete:
-					m.Loger.Warnf("[zetcd][watch] type:[%s] key:%q, value:%q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+					m.Loger.Warnf("[zetcd][watch] type:[%s] key:%q \n", ev.Type, ev.Kv.Key)
 					if m.State {
 						keyInfo, _, err := m.DecodeKeyValue(ev.Kv)
 						if err != nil {
