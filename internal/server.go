@@ -78,8 +78,6 @@ func (s *Server) Log() *logrus.Logger {
 }
 
 func (s *Server) GetLog(section string) *logrus.Logger {
-	s.RLock()
-	defer s.RUnlock()
 	section = s.getSectionLogName(section)
 	zLog,ok := s.Loger[section]
 	if ok{

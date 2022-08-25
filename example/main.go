@@ -13,8 +13,17 @@ import (
 
 func main()  {
 	zrpc.Init()
+	fmt.Println("inited ",zrpc.GetDb())
 	//fmt.Println(os.Getenv("site_mode"))
-	etcdRetry()
+	e := make(chan error,1000)
+	for  {
+		err :=db()
+		if err !=nil{
+			e<-err
+		}
+	}
+	<-e
+	//etcdRetry()
 }
 
 func etcd()  {
@@ -61,15 +70,16 @@ func etcdRetry()  {
 	fmt.Println("close")
 }
 
-func db()  {
+func db() error {
 	db := zrpc.GetDb()
 	type Book struct {
 		Id   int
 		Name string
 	}
 	var book Book
-	db.First(&book)
-	zrpc.Log().Info(fmt.Sprintf("book: %+v", book))
+	err := db.First(&book).Error
+	zrpc.Log().Info(fmt.Sprintf("book: %+v, err:%v", book, err))
+	return err
 }
 
 func log() {

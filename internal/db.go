@@ -53,6 +53,7 @@ func NewMysql(
 	}
 }
 
+
 func (m *Mysql) NewConnection() (*gorm.DB, error) {
 	newLogger := logger.New(
 		log.New(m.Logger.Writer(), "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
@@ -70,21 +71,7 @@ func (m *Mysql) NewConnection() (*gorm.DB, error) {
 		},
 		Logger: newLogger,
 	}
-	db, err := gorm.Open(mysql.Open(m.GetDns()), &conf)
-	if err != nil {
-		return db, err
-	}
-	sqlDB, err := db.DB()
-	if err != nil {
-		return db, err
-	}
-	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
-	sqlDB.SetMaxIdleConns(m.getMaxIdleConns())
-	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(m.getMaxOpenConns())
-	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(time.Duration(m.getConnMaxLifetime()) * time.Minute)
-	return db, nil
+	return gorm.Open(mysql.Open(m.GetDns()), &conf)
 }
 
 func (m *Mysql) SetLogger(logger *logrus.Logger) {
@@ -113,27 +100,17 @@ func (m *Mysql) GetDns() string {
 }
 
 //GetDb 获取数据库
-func (m *Mysql) GetDb() (*gorm.DB,error) {
-	//m.NewConnection()
+func (m *Mysql) GetDb() (db *gorm.DB,err error) {
 	if m.Db == nil{
-		db,err := m.NewConnection()
+		db,err = m.NewConnection()
+		if err != nil{
+			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
+			m.Logger.Errorf("[zrpc][db] connect error:%s",zrr.String())
+			return db, err
+		}
 		m.Db = db
-		if err != nil{
-			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
-			m.Logger.Errorf("[zrpc][db] connect error:%s",zrr.String())
-			return db,zrr
-		}
 	}
-	mdb,err := m.Db.DB()
-	if  err != nil || mdb.Ping() != nil {
-		db,err := m.NewConnection()
-		if err != nil{
-			zrr := NewError(zerr.MYSQL_CONNECT_ERROR,err.Error())
-			m.Logger.Errorf("[zrpc][db] connect error:%s",zrr.String())
-			m.Db = db
-		}
-	}
-	return m.Db,nil
+	return m.Db,err
 }
 
 // Close 关闭数据库

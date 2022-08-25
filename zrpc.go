@@ -12,11 +12,20 @@ import (
 var once sync.Once
 var K *koanf.Koanf
 var server  *internal.Server
+var db *gorm.DB
+var m sync.Mutex
+var zLog *logrus.Logger
 
 
 func Init()  {
 	once.Do(func() {
 		server = InitConfig()
+		zLog = server.Log()
+		var err error
+		db,err = server.GetDb()
+		if err != nil{
+			zLog.Errorf("[zrpc] GetDb error:%s", err)
+		}
 		K = internal.K
 	})
 }
@@ -33,11 +42,7 @@ func InitConfig() *internal.Server {
 
 // GetDb 系统默认Db
 func GetDb() *gorm.DB {
-	db,err:= server.GetDb()
-	if err != nil{
-		server.Log().Errorf("[zrpc] GetDb error:%s", err)
-	}
-	return db
+	return db.Session(&gorm.Session{})
 }
 
 // NewDb 获取指定Db
@@ -51,7 +56,7 @@ func NewLog(section string) *logrus.Logger {
 }
 // Log 获取日志
 func Log() *logrus.Logger {
-	return server.Log()
+	return zLog
 }
 
 func GetConf() *internal.Server {
