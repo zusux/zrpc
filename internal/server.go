@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-kit/kit/sd"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"github.com/zusux/zrpc/internal/util"
 	"github.com/zusux/zrpc/internal/zetcd"
@@ -20,19 +21,18 @@ type Pub struct {
 	Publish bool
 }
 
-
 type Server struct {
 	Cluster string
-	Ip     string
+	Ip      string
 	Name    string
-	Loger 	map[string]ZLog
-	Etcd  zetcd.Etcd
-	Retry  bool
-	Listen map[string]Pub
-	Mysql map[string]Mysql
-	Redis map[string]Redis
-	EtcdDis   *zetcd.EtcdDis
-	Service  map[string]string //service.key, service.value
+	Loger   map[string]ZLog
+	Etcd    zetcd.Etcd
+	Retry   bool
+	Listen  map[string]Pub
+	Mysql   map[string]Mysql
+	Redis   map[string]Redis
+	EtcdDis *zetcd.EtcdDis
+	Service map[string]string //service.key, service.value
 	sync.RWMutex
 }
 
@@ -43,7 +43,7 @@ func NewServer() (*Server, error) {
 	// Quick unmarshal.
 	err := K.Unmarshal("server", &svr)
 	if err != nil {
-		log.Printf("[zrpc][error] unmarshal config err: %s",err)
+		log.Printf("[zrpc][error] unmarshal config err: %s", err)
 		return &svr, err
 	}
 	svr.FillIp()
@@ -52,22 +52,22 @@ func NewServer() (*Server, error) {
 	return &svr, nil
 }
 
-func (s *Server) FillIp()  {
+func (s *Server) FillIp() {
 	if s.Ip == "" {
 		ip, err := util.GetLocalIP()
 		if err != nil {
-			log.Printf("[zrpc] reg get local ip err: %s",err)
+			log.Printf("[zrpc] reg get local ip err: %s", err)
 		}
 		s.Ip = ip.String()
 	}
 }
-func (s *Server) SetSiteMode(siteMode string)  {
+func (s *Server) SetSiteMode(siteMode string) {
 	s.Cluster = siteMode
 }
 
 func GetSiteMode() string {
 	siteMode := os.Getenv("site_mode")
-	if siteMode == ""{
+	if siteMode == "" {
 		siteMode = "prod"
 	}
 	return siteMode
@@ -79,9 +79,9 @@ func (s *Server) Log() *logrus.Logger {
 
 func (s *Server) GetLog(section string) *logrus.Logger {
 	section = s.getSectionLogName(section)
-	zLog,ok := s.Loger[section]
-	if ok{
-		if !zLog.Initialize{
+	zLog, ok := s.Loger[section]
+	if ok {
+		if !zLog.Initialize {
 			zLog.init()
 		}
 		return zLog.Log
@@ -89,9 +89,9 @@ func (s *Server) GetLog(section string) *logrus.Logger {
 	return logrus.New()
 }
 
-func (s *Server) getSectionLogName(section string) string{
-	for k,_ := range s.Loger{
-		if section == k{
+func (s *Server) getSectionLogName(section string) string {
+	for k := range s.Loger {
+		if section == k {
 			return section
 		}
 	}
@@ -128,7 +128,6 @@ func (s *Server) UnRegister() {
 		s.Log().Warnf("[zrpc] Server %s unRegister", key)
 	}
 
-
 }
 
 // GrpcRequestRemote 外部服务
@@ -145,11 +144,11 @@ func (s *Server) GrpcRequestRemote(ctx context.Context, serverName string, req i
 			response, err = ed(ctx, req)
 		} else {
 			s.Log().Errorf("[zetcd][service] getValidAddress addr:%s, ok:%v", addr, ok)
-			err = errors.New(serverName+ " service endpoint address is not valid")
+			err = errors.New(serverName + " service endpoint address is not valid")
 		}
 	} else {
-		s.Log().Errorf("[zetcd][service] %s have not grpc endpoint:%v, ok:%v",serverName, valueInfo, ok)
-		err = errors.New(serverName+ " service no find endpoint")
+		s.Log().Errorf("[zetcd][service] %s have not grpc endpoint:%v, ok:%v", serverName, valueInfo, ok)
+		err = errors.New(serverName + " service no find endpoint")
 	}
 	return
 }
@@ -160,30 +159,46 @@ func (s *Server) GetRandomEndPoint(serviceName string) (endpoint string, err err
 	if ok {
 		addr, ok := valueInfo.GetValidAddress()
 		if ok {
-			return addr,nil
+			return addr, nil
 		} else {
 			s.Log().Errorf("[zetcd][service] service endpoint address is not valid addr:%s, ok:%v", addr, ok)
-			err = errors.New(serviceName+ " service endpoint address is not valid")
+			err = errors.New(serviceName + " service endpoint address is not valid")
 		}
 	} else {
-		s.Log().Errorf("[zetcd][service] %s have not endpoint",serviceName)
-		err = errors.New(serviceName+ " service no find endpoint")
+		s.Log().Errorf("[zetcd][service] %s have not endpoint", serviceName)
+		err = errors.New(serviceName + " service no find endpoint")
 	}
 	return
 }
 
 // GetDb 指定DB
-func (s *Server)GetDb() (*gorm.DB, error) {
+func (s *Server) GetDb() (*gorm.DB, error) {
 	return s.GetDbBySec("default_mysql")
 }
 
 // GetDbBySec 指定DB
-func (s *Server)GetDbBySec(sectionDb string) (*gorm.DB, error) {
-	mysql,ok := s.Mysql[sectionDb]
+func (s *Server) GetDbBySec(sectionDb string) (*gorm.DB, error) {
+	mysql, ok := s.Mysql[sectionDb]
 	if ok {
 		log := s.GetLog(mysql.SectionLog)
 		mysql.SetLogger(log)
 		return mysql.GetDb()
 	}
-	return nil, errors.New(fmt.Sprintf("mysql config %s is not find",sectionDb))
+	return nil, errors.New(fmt.Sprintf("mysql config %s is not find", sectionDb))
+}
+
+// GetRedis 指定redis
+func (s *Server) GetRedis(sectionDb string) (*redis.Client, error) {
+	redis, ok := s.Redis[sectionDb]
+	if ok {
+		return redis.Client(), nil
+	}
+	return nil, errors.New(fmt.Sprintf("redis config %s is not find", sectionDb))
+}
+// GetClusterRedis 获取redis集群
+func (s *Server) GetClusterRedis(addrs []string) *redis.ClusterClient {
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: addrs,
+	})
+	return rdb
 }

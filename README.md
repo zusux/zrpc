@@ -28,6 +28,8 @@ name := zrpc.K.String("server.name")
    gorm  := zrpc.GetDb()
 ```
 
+#### redis 获取
+redis := zrpc.Redis()
 ####grpc 服务注册
 ```go
     conf := zrpc.GetConf()

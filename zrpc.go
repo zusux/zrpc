@@ -1,6 +1,7 @@
 package zrpc
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/knadh/koanf"
 	"github.com/sirupsen/logrus"
 	"github.com/zusux/zrpc/internal"
@@ -15,6 +16,7 @@ var server  *internal.Server
 var db *gorm.DB
 var m sync.Mutex
 var zLog *logrus.Logger
+var red *redis.Client
 
 
 func Init()  {
@@ -25,6 +27,10 @@ func Init()  {
 		db,err = server.GetDb()
 		if err != nil{
 			zLog.Errorf("[zrpc] GetDb error:%s", err)
+		}
+		red,err = server.GetRedis("default_redis")
+		if err != nil{
+			zLog.Errorf("[zrpc] GetRedis error:%s", err)
 		}
 		K = internal.K
 	})
@@ -57,6 +63,11 @@ func NewLog(section string) *logrus.Logger {
 // Log 获取日志
 func Log() *logrus.Logger {
 	return zLog
+}
+
+// Redis redis
+func Redis() *redis.Client {
+	return red
 }
 
 func GetConf() *internal.Server {

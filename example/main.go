@@ -11,22 +11,21 @@ import (
 	"time"
 )
 
+
+
 func main()  {
+	redis()
+}
+func redis()  {
 	zrpc.Init()
-	fmt.Println("inited ",zrpc.GetDb())
-	//fmt.Println(os.Getenv("site_mode"))
-	e := make(chan error,1000)
-	for  {
-		err :=db()
-		if err !=nil{
-			e<-err
-		}
-	}
-	<-e
-	//etcdRetry()
+	str,err :=zrpc.Redis().Set(context.Background(),"aa",11,0).Result()
+	fmt.Println(str,err)
+	str,err =zrpc.Redis().Get(context.Background(),"aa").Result()
+	fmt.Println(str,err)
 }
 
 func etcd()  {
+	zrpc.Init()
 	conf := zrpc.GetConf()
 	zrpc.Log().Info(fmt.Sprintf("%+v",conf))
 	conf.Register()
@@ -39,6 +38,7 @@ func etcd()  {
 }
 
 func etcdRetry()  {
+	zrpc.Init()
 	conf := zrpc.GetConf()
 	zrpc.Log().Info(fmt.Sprintf("%+v",conf))
 	conf.Register()
@@ -70,6 +70,20 @@ func etcdRetry()  {
 	fmt.Println("close")
 }
 
+func testDb()  {
+	zrpc.Init()
+	fmt.Println("inited ",zrpc.GetDb())
+	//fmt.Println(os.Getenv("site_mode"))
+	e := make(chan error,1000)
+	for  {
+		err :=db()
+		if err !=nil{
+			e<-err
+		}
+	}
+	<-e
+	//etcdRetry()
+}
 func db() error {
 	db := zrpc.GetDb()
 	type Book struct {
